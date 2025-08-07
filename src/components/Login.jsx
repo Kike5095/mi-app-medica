@@ -7,9 +7,19 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Función para validar que los campos no estén vacíos
+  const validateFields = () => {
+    if (!email || !password) {
+      setError("El correo y la contraseña no pueden estar vacíos.");
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
   const handleSignUp = async (e) => {
     e.preventDefault();
-    setError('');
+    if (!validateFields()) return;
     try {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (err) {
@@ -19,7 +29,7 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    if (!validateFields()) return;
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
@@ -27,33 +37,24 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error al iniciar sesión con Google:", error);
-    }
-  };
+  const handleGoogleLogin = async () => { /* ... (sin cambios) ... */ };
 
   return (
     <main className="container">
       <article>
-        <h1 align="center">App Médica</h1>
+        <h1 align="center">Programa de Hospitalizacion Domiciliaria Colsanitas</h1>
         <form>
           <input 
             type="email" 
             placeholder="Correo electrónico" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
           <input 
             type="password" 
             placeholder="Contraseña" 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
           <div className="grid">
             <button onClick={handleLogin}>Iniciar Sesión</button>

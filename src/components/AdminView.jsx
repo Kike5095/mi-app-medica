@@ -28,6 +28,7 @@ const AdminView = ({ usuario, handleLogout }) => {
               <PatientForm />
               <PatientList onPatientSelect={(patient) => setSelectedPatient(patient)} />
             </section>
+            {/* Ya no hay sección de Gestión de Personal aquí */}
           </main>
         );
     }

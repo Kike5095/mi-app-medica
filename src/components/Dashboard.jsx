@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore'; // Cambiamos getDocs por onSnapshot
 import { signOut } from 'firebase/auth';
 import AdminView from './AdminView.jsx';
 import AuxiliarView from './AuxiliarView.jsx';
@@ -11,18 +11,21 @@ const Dashboard = ({ usuario }) => {
     const [userProfile, setUserProfile] = useState(null);
 
     useEffect(() => {
-        const fetchUserProfile = async () => {
-            if (usuario) {
-                const q = query(collection(db, "personal"), where("email", "==", usuario.email));
-                const querySnapshot = await getDocs(q);
+        if (usuario) {
+            const q = query(collection(db, "personal"), where("email", "==", usuario.email));
+
+            // onSnapshot se queda escuchando en tiempo real
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
                 if (!querySnapshot.empty) {
                     setUserProfile(querySnapshot.docs[0].data());
                 } else {
-                    setUserProfile({ rol: 'Desconocido' });
+                    // Si no lo encuentra, no hacemos nada todavía, esperamos a que la función lo cree.
+                    // Podemos dejar un estado temporal de "cargando" o "verificando".
+                    setUserProfile(null); // Forzamos el estado de carga
                 }
-            }
-        };
-        fetchUserProfile();
+            });
+            return () => unsubscribe(); // Limpiamos el listener al salir
+        }
     }, [usuario]);
 
     const handleLogout = async () => {
@@ -34,11 +37,11 @@ const Dashboard = ({ usuario }) => {
     };
 
     if (!userProfile) {
-        return <div className="container" aria-busy="true">Cargando perfil...</div>;
+        return <div>Verificando permisos...</div>;
     }
 
     switch (userProfile.rol) {
-        case 'Médico':
+        case 'Médico': // Super Admin
             return <AdminView usuario={usuario} handleLogout={handleLogout} />;
         case 'Jefe de Enfermería':
         case 'Auxiliar Admin':
@@ -46,14 +49,14 @@ const Dashboard = ({ usuario }) => {
         case 'Auxiliar':
             return <AuxiliarView usuario={usuario} handleLogout={handleLogout} />;
         default:
-             // Asumimos que un médico sin privilegios especiales tiene el rol 'Medico'
+             // Este caso es para los médicos que no son super admin
             if (userProfile.rol === 'Medico') {
-                return <MedicoView usuario={usuario} handleLogout={handleLogout} />;
+                 return <MedicoView usuario={usuario} handleLogout={handleLogout} />;
             }
             return (
-                <div className="container">
+                <div>
                     <h1>Acceso Denegado</h1>
-                    <p>Tu rol no está reconocido en el sistema.</p>
+                    <p>Tu rol no está reconocido o aún no ha sido asignado. Por favor, contacta a un administrador.</p>
                     <button onClick={handleLogout}>Cerrar Sesión</button>
                 </div>
             );

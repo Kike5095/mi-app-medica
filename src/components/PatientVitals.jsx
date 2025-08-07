@@ -3,10 +3,14 @@ import { db, auth } from '../firebaseConfig';
 import { collection, addDoc, query, onSnapshot, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import PatientNotesView from './PatientNotesView.jsx'; // <-- IMPORTAMOS LA NUEVA VISTA
 
 ChartJS.register( CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend );
 
 const PatientVitals = ({ patient, onBack }) => {
+  // --- NUEVO ESTADO PARA CONTROLAR LA VISTA ---
+  const [showingNotes, setShowingNotes] = useState(false);
+
   const [temperature, setTemperature] = useState('');
   const [bloodPressure, setBloodPressure] = useState('');
   const [heartRate, setHeartRate] = useState('');
@@ -30,9 +34,7 @@ const PatientVitals = ({ patient, onBack }) => {
     if (!temperature || !bloodPressure || !heartRate || !respiratoryRate || !saturation) {
       alert("Por favor, llena todos los campos de signos vitales."); return;
     }
-    const numbers = bloodPressure.replace(/\D/g, '');
-    let formattedBP = bloodPressure;
-    if (numbers.length >= 3 && numbers.length <= 6) { const splitPoint = numbers.length > 4 ? 3 : 2; const systolic = numbers.slice(0, splitPoint); const diastolic = numbers.slice(splitPoint); if (systolic && diastolic) { formattedBP = `${systolic}/${diastolic}`; } } else if (!bloodPressure.includes('/')) { alert("Por favor, ingresa la presión arterial en un formato reconocible (ej: 120/80, 12080)."); return; }
+    const numbers = bloodPressure.replace(/\D/g, ''); let formattedBP = bloodPressure; if (numbers.length >= 3 && numbers.length <= 6) { const splitPoint = numbers.length > 4 ? 3 : 2; const systolic = numbers.slice(0, splitPoint); const diastolic = numbers.slice(splitPoint); if (systolic && diastolic) { formattedBP = `${systolic}/${diastolic}`; } } else if (!bloodPressure.includes('/')) { alert("Por favor, ingresa la presión arterial en un formato reconocible (ej: 120/80, 12080)."); return; }
     try {
       await addDoc(collection(db, "patients", patient.docId, "vitals"), {
         temperature, bloodPressure: formattedBP, heartRate, respiratoryRate, saturation, note, author: auth.currentUser.displayName || auth.currentUser.email, timestamp: new Date()
@@ -44,6 +46,8 @@ const PatientVitals = ({ patient, onBack }) => {
     }
   };
 
+  const handleFinalizeTreatment = async () => { if (window.confirm(`¿Seguro que quieres finalizar el tratamiento para ${patient.name}?`)) { const patientDocRef = doc(db, "patients", patient.docId); try { await updateDoc(patientDocRef, { status: "Finalizado" }); alert("Tratamiento finalizado."); onBack(); } catch (error) { console.error("Error al finalizar:", error); alert("Hubo un error."); } } };
+
   const labels = vitals.map(v => new Date(v.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   const chartOptions = (title) => ({ responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: title } } });
   const tempData = { labels, datasets: [{ label: 'Temperatura (°C)', data: vitals.map(v => v.temperature), borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.5)' }] };
@@ -52,13 +56,23 @@ const PatientVitals = ({ patient, onBack }) => {
   const respiratoryRateData = { labels, datasets: [{ label: 'Frecuencia Respiratoria (rpm)', data: vitals.map(v => v.respiratoryRate), borderColor: 'rgb(255, 159, 64)', backgroundColor: 'rgba(255, 159, 64, 0.5)' }] };
   const saturationData = { labels, datasets: [{ label: 'Saturación (%)', data: vitals.map(v => v.saturation), borderColor: 'rgb(99, 255, 132)', backgroundColor: 'rgba(99, 255, 132, 0.5)' }] };
 
+  // Si `showingNotes` es true, mostramos solo el componente de notas
+  if (showingNotes) {
+    return <PatientNotesView patient={patient} onBack={() => setShowingNotes(false)} />;
+  }
+
   return (
     <main className="container">
       <nav>
-        <ul><li><button className="secondary outline" onClick={onBack}>&larr; Volver a la lista</button></li></ul>
+        <ul>
+          <li><button className="secondary outline" onClick={onBack}>&larr; Volver a la lista</button></li>
+          {patient.status === 'Activo' && (
+            <li><button className="contrast" onClick={handleFinalizeTreatment}>Finalizar Tratamiento</button></li>
+          )}
+        </ul>
         <ul><li><h2>Historial de: {patient.name}</h2></li></ul>
       </nav>
-      
+
       <article>
         <form onSubmit={handleAddVital}>
           <h4>Añadir Signos Vitales y Nota</h4>
@@ -77,22 +91,16 @@ const PatientVitals = ({ patient, onBack }) => {
         </form>
       </article>
 
-      {vitals.length > 1 && (
-        <section>
-          <h4>Gráficas de Evolución</h4>
-          <div className="grid">
-            <article><h6>Temperatura</h6><Line options={chartOptions('')} data={tempData} /></article>
-            <article><h6>Frecuencia Cardíaca</h6><Line options={chartOptions('')} data={heartRateData} /></article>
-            <article><h6>Frecuencia Respiratoria</h6><Line options={chartOptions('')} data={respiratoryRateData} /></article>
-            <article><h6>Saturación</h6><Line options={chartOptions('')} data={saturationData} /></article>
-          </div>
-          <article><Line options={chartOptions('Evolución de Presión Arterial')} data={bloodPressureData} /></article>
-        </section>
-      )}
+      {/* --- BOTÓN PARA VER NOTAS --- */}
+      <button className="contrast" onClick={() => setShowingNotes(true)} style={{width: '100%', marginTop: '1rem'}}>
+        Ver / Añadir Notas de Enfermería Generales
+      </button>
 
+      {vitals.length > 1 && ( <section> <h4>Gráficas de Evolución</h4> <div className="grid"> <article><h6>Temperatura</h6><Line options={chartOptions('')} data={tempData} /></article> <article><h6>Frecuencia Cardíaca</h6><Line options={chartOptions('')} data={heartRateData} /></article> <article><h6>Frecuencia Respiratoria</h6><Line options={chartOptions('')} data={respiratoryRateData} /></article> <article><h6>Saturación</h6><Line options={chartOptions('')} data={saturationData} /></article> </div> <article><Line options={chartOptions('Evolución de Presión Arterial')} data={bloodPressureData} /></article> </section> )}
       <figure>
-        <table>
-          {/* ... (código de la tabla sin cambios) ... */}
+        <table role="grid">
+          <thead><tr><th>Fecha y Hora</th><th>Frec. Cardíaca</th><th>Frec. Respiratoria</th><th>Presión Arterial</th><th>Saturación</th><th>Temperatura</th><th>Nota de la Toma</th></tr></thead>
+          <tbody>{vitals.map(vital => ( <tr key={vital.id}><td>{new Date(vital.timestamp.seconds * 1000).toLocaleString('es-CO')}</td><td>{vital.heartRate} lpm</td><td>{vital.respiratoryRate} rpm</td><td>{vital.bloodPressure}</td><td>{vital.saturation} %</td><td>{vital.temperature} °C</td><td>{vital.note}</td></tr> )).reverse()}</tbody>
         </table>
       </figure>
     </main>
