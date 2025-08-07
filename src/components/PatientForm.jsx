@@ -1,34 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, query, onSnapshot, where } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 
 const PatientForm = () => {
     const [patientName, setPatientName] = useState('');
     const [patientId, setPatientId] = useState('');
-    const [selectedAux, setSelectedAux] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [assignableStaff, setAssignableStaff] = useState([]);
-
-    useEffect(() => {
-        // --- CAMBIO AQUÍ: 'Auxiliar Admin' ahora está sin espacio ---
-        const q = query(
-          collection(db, "personal"), 
-          where("rol", "in", ["Auxiliar", "AuxiliarAdmin", "Jefe de Enfermería"])
-        );
-        
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const staffData = querySnapshot.docs.map(doc => ({ 
-                id: doc.id, 
-                ...doc.data() 
-            }));
-            setAssignableStaff(staffData);
-        });
-        return () => unsubscribe();
-    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!patientName || !patientId || !selectedAux || !endDate) {
+        if (!patientName || !patientId || !endDate) {
             alert('Por favor, llena todos los campos');
             return;
         }
@@ -36,13 +17,15 @@ const PatientForm = () => {
             await addDoc(collection(db, "patients"), {
                 name: patientName,
                 id: patientId,
-                email_auxiliar_asignado: selectedAux,
+                // Ya no guardamos el email de la auxiliar aquí
                 treatmentEndDate: new Date(endDate),
                 createdAt: new Date(),
                 status: 'Pendiente'
             });
             alert("¡Paciente guardado con éxito!");
-            setPatientName(''); setPatientId(''); setSelectedAux(''); setEndDate('');
+            setPatientName('');
+            setPatientId('');
+            setEndDate('');
         } catch (error) {
             console.error("Error al añadir el documento: ", error);
             alert("Hubo un error al guardar el paciente.");
@@ -62,15 +45,6 @@ const PatientForm = () => {
             <h3>Añadir Nuevo Paciente</h3>
             <div style={styles.formGroup}><label htmlFor="patientName" style={styles.label}>Nombre Completo</label><input type="text" id="patientName" style={styles.input} value={patientName} onChange={(e) => setPatientName(e.target.value)} /></div>
             <div style={styles.formGroup}><label htmlFor="patientId" style={styles.label}>Cédula</label><input type="text" id="patientId" style={styles.input} value={patientId} onChange={(e) => setPatientId(e.target.value)} /></div>
-            <div style={styles.formGroup}>
-                <label htmlFor="auxiliary" style={styles.label}>Asignar Personal</label>
-                <select id="auxiliary" style={styles.input} value={selectedAux} onChange={(e) => setSelectedAux(e.target.value)}>
-                    <option value="">Selecciona una persona...</option>
-                    {assignableStaff.map(staff => (
-                        <option key={staff.id} value={staff.email}>{staff.nombre} ({staff.rol})</option>
-                    ))}
-                </select>
-            </div>
             <div style={styles.formGroup}>
                 <label htmlFor="endDate" style={styles.label}>Fecha de Fin de Tratamiento</label>
                 <input type="date" id="endDate" style={styles.input} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
