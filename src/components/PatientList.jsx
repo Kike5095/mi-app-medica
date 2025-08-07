@@ -35,10 +35,9 @@ const PatientList = ({ onPatientSelect }) => {
       <article>
         <h4>Pacientes Activos y Pendientes</h4>
         <figure>
-          <table>
+          <table role="grid">
             <thead>
               <tr>
-                <th scope="col">Fecha Reg.</th>
                 <th scope="col">Nombre</th>
                 <th scope="col">Cédula</th>
                 <th scope="col">Estado</th>
@@ -48,12 +47,12 @@ const PatientList = ({ onPatientSelect }) => {
             <tbody>
               {activePatients.map(patient => (
                 <tr key={patient.docId}>
-                  <td>{patient.createdAt ? new Date(patient.createdAt.seconds * 1000).toLocaleDateString('es-CO') : 'N/A'}</td>
                   <td>{patient.name}</td>
                   <td>{patient.id}</td>
                   <td>{patient.status || 'N/A'}</td>
                   <td>
-                    <div className="grid">
+                    {/* --- CAMBIO AQUÍ: Usamos un "group" para los botones --- */}
+                    <div role="group">
                       {patient.status === 'Pendiente' && <button className="success" onClick={() => handleStatusChange(patient.docId, 'Activo')}>Activar</button>}
                       {patient.status === 'Activo' && <button className="contrast" onClick={() => handleStatusChange(patient.docId, 'Finalizado')}>Finalizar</button>}
                       <button className="secondary" onClick={() => onPatientSelect(patient)}>Ver Detalles</button>
@@ -69,7 +68,7 @@ const PatientList = ({ onPatientSelect }) => {
       <article>
         <h4>Historial de Pacientes Finalizados</h4>
         <figure>
-          <table>
+          <table role="grid">
             <thead>
               <tr>
                 <th scope="col">Nombre</th>
