@@ -49,13 +49,17 @@ const MedicoView = ({ usuario, handleLogout }) => {
                             {allPatients.map(patient => (
                                 <tr key={patient.docId}>
                                     <td>{patient.name}</td>
-                                    <td>{patient.id}</td>
+                                    <td><a href="#" onClick={(e) => e.preventDefault()}>{patient.id}</a></td>
                                     <td>{patient.status}</td>
                                     <td>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                        {/* --- INICIO DEL CÓDIGO CORREGIDO --- */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             <button onClick={() => setSelectedPatient(patient)}>Ver Historial</button>
-                                            <button style={{ backgroundColor: 'var(--pico-color-red-500)'}} className="contrast" onClick={() => handleFinalize(patient.docId)}>Finalizar</button>
+                                            <button style={{'--pico-background-color': '#dc3545', '--pico-color': 'white'}} onClick={() => handleFinalize(patient.docId)}>
+                                              Finalizar
+                                            </button>
                                         </div>
+                                        {/* --- FIN DEL CÓDIGO CORREGIDO --- */}
                                     </td>
                                 </tr>
                             ))}
