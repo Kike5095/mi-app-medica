@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-// --- CORRECCIÓN EN ESTA LÍNEA ---
 import { collection, onSnapshot, orderBy, query, doc, updateDoc, where } from 'firebase/firestore'; 
 
 const PatientList = ({ onPatientSelect }) => {
@@ -49,14 +48,24 @@ const PatientList = ({ onPatientSelect }) => {
               {activePatients.map(patient => (
                 <tr key={patient.docId}>
                   <td>{patient.name}</td>
-                  <td>{patient.id}</td>
+                  <td><a href="#" onClick={(e) => e.preventDefault()}>{patient.id}</a></td>
                   <td>{patient.status || 'N/A'}</td>
                   <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                      {patient.status === 'Pendiente' && <button style={{ backgroundColor: 'var(--pico-color-green-500)'}} onClick={() => handleStatusChange(patient.docId, 'Activo')}>Activar</button>}
-                      {patient.status === 'Activo' && <button style={{ backgroundColor: 'var(--pico-color-red-500)'}} className="contrast" onClick={() => handleStatusChange(patient.docId, 'Finalizado')}>Finalizar</button>}
+                    {/* --- INICIO DEL CÓDIGO CORREGIDO --- */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {patient.status === 'Pendiente' && 
+                        <button style={{'--pico-background-color': '#28a745', '--pico-color': 'white'}} onClick={() => handleStatusChange(patient.docId, 'Activo')}>
+                          Activar
+                        </button>
+                      }
+                      {patient.status === 'Activo' && 
+                        <button style={{'--pico-background-color': '#dc3545', '--pico-color': 'white'}} onClick={() => handleStatusChange(patient.docId, 'Finalizado')}>
+                          Finalizar
+                        </button>
+                      }
                       <button className="secondary" onClick={() => onPatientSelect(patient)}>Ver Detalles</button>
                     </div>
+                    {/* --- FIN DEL CÓDIGO CORREGIDO --- */}
                   </td>
                 </tr>
               ))}
@@ -81,7 +90,7 @@ const PatientList = ({ onPatientSelect }) => {
               {finishedPatients.map(patient => (
                 <tr key={patient.docId}>
                   <td>{patient.name}</td>
-                  <td>{patient.id}</td>
+                  <td><a href="#" onClick={(e) => e.preventDefault()}>{patient.id}</a></td>
                   <td>{patient.status}</td>
                   <td><button className="secondary" onClick={() => onPatientSelect(patient)}>Ver Detalles</button></td>
                 </tr>
