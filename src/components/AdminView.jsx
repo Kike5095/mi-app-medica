@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import PatientForm from './PatientForm.jsx';
 import PatientList from './PatientList.jsx';
-import StaffForm from './StaffForm.jsx';
-import StaffList from './StaffList.jsx';
 import MedicoView from './MedicoView.jsx';
 import AuxiliarView from './AuxiliarView.jsx';
 import PatientHistory from './PatientHistory.jsx';
@@ -24,18 +22,13 @@ const AdminView = ({ usuario, handleLogout }) => {
       case 'admin':
       default:
         return (
-          <>
+          <main>
             <section>
               <h2>Gestión de Pacientes</h2>
               <PatientForm />
               <PatientList onPatientSelect={(patient) => setSelectedPatient(patient)} />
             </section>
-            <section>
-              <h2>Gestión de Personal</h2>
-              <StaffForm />
-              <StaffList />
-            </section>
-          </>
+          </main>
         );
     }
   };
@@ -43,15 +36,10 @@ const AdminView = ({ usuario, handleLogout }) => {
   return (
     <div className="container">
       <nav>
-        <ul>
-          <li><strong>Panel de Super-Administrador</strong></li>
-        </ul>
-        <ul>
-          <li>{usuario.email}</li>
-          <li><button className="secondary" onClick={handleLogout}>Cerrar Sesión</button></li>
-        </ul>
+        <ul><li><strong>Panel de Super-Administrador</strong></li></ul>
+        <ul><li>{usuario.email}</li><li><button className="secondary" onClick={handleLogout}>Cerrar Sesión</button></li></ul>
       </nav>
-      
+
       <nav>
         <ul>
           <li><strong>Simular Vista Como:</strong></li>
