@@ -6,65 +6,64 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  // Función para validar que los campos no estén vacíos
-  const validateFields = () => {
-    if (!email || !password) {
-      setError("El correo y la contraseña no pueden estar vacíos.");
-      return false;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError('');
-    return true;
-  };
+    if (!email.trim() || !password.trim()) {
+      setError("Por favor, ingresa el correo y la contraseña.");
+      return;
+    }
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    if (!validateFields()) return;
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
     } catch (err) {
-      setError("Error al registrar: " + err.message);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este correo ya está registrado. Intenta iniciar sesión.');
+      } else if (err.code === 'auth/invalid-credential') {
+        setError('Correo o contraseña incorrectos.');
+      } else {
+        setError('Ocurrió un error. Por favor, intenta de nuevo.');
+      }
     }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (!validateFields()) return;
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      setError("Error al iniciar sesión: " + err.message);
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error al iniciar sesión con Google:", error);
     }
   };
-
-  const handleGoogleLogin = async () => { /* ... (sin cambios) ... */ };
 
   return (
-    <main className="container">
+    <main className="container" style={{ maxWidth: '400px', marginTop: '5rem' }}>
       <article>
-        <h1 align="center">Programa de Hospitalizacion Domiciliaria Colsanitas</h1>
-        <form>
-          <input 
-            type="email" 
-            placeholder="Correo electrónico" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input 
-            type="password" 
-            placeholder="Contraseña" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <div className="grid">
-            <button onClick={handleLogin}>Iniciar Sesión</button>
-            <button className="secondary" onClick={handleSignUp}>Registrarse</button>
-          </div>
+        <hgroup>
+          <h1>Bienvenido de Nuevo</h1>
+          <h2>{isRegistering ? 'Crea tu cuenta para empezar' : 'Ingresa a tu panel de control'}</h2>
+        </hgroup>
+
+        <form onSubmit={handleSubmit}>
+          <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <button type="submit">{isRegistering ? 'Registrarse' : 'Iniciar Sesión'}</button>
         </form>
-        <p align="center">o</p>
-        <button className="contrast" onClick={handleGoogleLogin}>
-          Continuar con Google
-        </button>
+
+        <a href="#" onClick={(e) => { e.preventDefault(); setIsRegistering(!isRegistering); setError(''); }}>
+          {isRegistering ? '¿Ya tienes una cuenta? Inicia sesión' : '¿No tienes una cuenta? Regístrate'}
+        </a>
+
+        <hr />
+
+        <button className="contrast" onClick={handleGoogleLogin}>Continuar con Google</button>
+
         {error && <p style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
       </article>
     </main>
