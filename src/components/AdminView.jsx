@@ -5,9 +5,15 @@ import StaffForm from './StaffForm';
 import StaffList from './StaffList';
 import MedicoView from './MedicoView';
 import AuxiliarView from './AuxiliarView';
+import PatientVitals from './PatientVitals';
 
 const AdminView = ({ usuario, handleLogout }) => {
-  const [viewMode, setViewMode] = useState('admin'); // 'admin', 'medico', 'auxiliar'
+  const [viewMode, setViewMode] = useState('admin');
+  const [selectedPatient, setSelectedPatient] = useState(null);
+
+  if (selectedPatient) {
+    return <PatientVitals patient={selectedPatient} onBack={() => setSelectedPatient(null)} />;
+  }
 
   const styles = {
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '10px' },
@@ -15,7 +21,9 @@ const AdminView = ({ usuario, handleLogout }) => {
     mainContent: { marginTop: '20px' },
     simulationBar: { padding: '10px', backgroundColor: '#e9ecef', marginBottom: '20px', borderRadius: '5px', display: 'flex', gap: '10px', alignItems: 'center' },
     simButton: { padding: '8px 12px', border: '1px solid #ccc', cursor: 'pointer', backgroundColor: 'white', borderRadius: '5px' },
-    activeSimButton: { backgroundColor: '#007bff', color: 'white', borderColor: '#007bff' }
+    // --- CAMBIO AQUÍ para solucionar la advertencia ---
+    activeSimButton: { backgroundColor: '#007bff', color: 'white', border: '1px solid #007bff' },
+    section: { marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ccc' }
   };
 
   const renderCurrentView = () => {
@@ -28,12 +36,12 @@ const AdminView = ({ usuario, handleLogout }) => {
       default:
         return (
           <main style={styles.mainContent}>
-            <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ccc' }}>
+            <div style={styles.section}>
               <h2>Gestión de Pacientes</h2>
               <PatientForm />
-              <PatientList />
+              <PatientList onPatientSelect={(patient) => setSelectedPatient(patient)} />
             </div>
-            <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ccc' }}>
+            <div style={styles.section}>
               <h2>Gestión de Personal</h2>
               <StaffForm />
               <StaffList />
@@ -52,7 +60,7 @@ const AdminView = ({ usuario, handleLogout }) => {
           <button onClick={handleLogout} style={styles.logoutButton}>Cerrar Sesión</button>
         </div>
       </header>
-
+      
       <div style={styles.simulationBar}>
         <strong>Simular Vista Como:</strong>
         <button 
