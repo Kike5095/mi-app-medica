@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, orderBy, query, doc, updateDoc, where } from 'firestore'; 
+// --- CORRECCIÓN EN ESTA LÍNEA ---
+import { collection, onSnapshot, orderBy, query, doc, updateDoc, where } from 'firebase/firestore'; 
 
 const PatientList = ({ onPatientSelect }) => {
   const [activePatients, setActivePatients] = useState([]);
@@ -29,7 +30,7 @@ const PatientList = ({ onPatientSelect }) => {
       await updateDoc(patientDocRef, { status: newStatus });
     }
   };
-  
+
   return (
     <>
       <article>
