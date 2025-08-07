@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, onSnapshot, where } from 'firebase/firestore';
 
 const PatientForm = () => {
     const [patientName, setPatientName] = useState('');
@@ -10,13 +10,17 @@ const PatientForm = () => {
     const [assignableStaff, setAssignableStaff] = useState([]);
 
     useEffect(() => {
+        // --- CAMBIO AQUÍ: 'Auxiliar Admin' ahora está sin espacio ---
         const q = query(
           collection(db, "personal"), 
-          where("rol", "in", ["Auxiliar", "Auxiliar Admin", "Jefe de Enfermería"])
+          where("rol", "in", ["Auxiliar", "AuxiliarAdmin", "Jefe de Enfermería"])
         );
-
+        
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const staffData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const staffData = querySnapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data() 
+            }));
             setAssignableStaff(staffData);
         });
         return () => unsubscribe();
