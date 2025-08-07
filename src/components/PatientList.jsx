@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, orderBy, query, doc, updateDoc, where } from 'firebase/firestore'; 
+import { collection, onSnapshot, orderBy, query, doc, updateDoc, where } from 'firestore'; 
 
 const PatientList = ({ onPatientSelect }) => {
   const [activePatients, setActivePatients] = useState([]);
@@ -29,12 +29,12 @@ const PatientList = ({ onPatientSelect }) => {
       await updateDoc(patientDocRef, { status: newStatus });
     }
   };
-
+  
   return (
     <>
       <article>
         <h4>Pacientes Activos y Pendientes</h4>
-        <figure>
+        <div style={{ overflowX: 'auto' }}>
           <table role="grid">
             <thead>
               <tr>
@@ -51,10 +51,9 @@ const PatientList = ({ onPatientSelect }) => {
                   <td>{patient.id}</td>
                   <td>{patient.status || 'N/A'}</td>
                   <td>
-                    {/* --- CAMBIO AQUÍ: Usamos un "group" para los botones --- */}
-                    <div role="group">
-                      {patient.status === 'Pendiente' && <button className="success" onClick={() => handleStatusChange(patient.docId, 'Activo')}>Activar</button>}
-                      {patient.status === 'Activo' && <button className="contrast" onClick={() => handleStatusChange(patient.docId, 'Finalizado')}>Finalizar</button>}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      {patient.status === 'Pendiente' && <button style={{ backgroundColor: 'var(--pico-color-green-500)'}} onClick={() => handleStatusChange(patient.docId, 'Activo')}>Activar</button>}
+                      {patient.status === 'Activo' && <button style={{ backgroundColor: 'var(--pico-color-red-500)'}} className="contrast" onClick={() => handleStatusChange(patient.docId, 'Finalizado')}>Finalizar</button>}
                       <button className="secondary" onClick={() => onPatientSelect(patient)}>Ver Detalles</button>
                     </div>
                   </td>
@@ -62,12 +61,12 @@ const PatientList = ({ onPatientSelect }) => {
               ))}
             </tbody>
           </table>
-        </figure>
+        </div>
       </article>
 
       <article>
         <h4>Historial de Pacientes Finalizados</h4>
-        <figure>
+        <div style={{ overflowX: 'auto' }}>
           <table role="grid">
             <thead>
               <tr>
@@ -88,7 +87,7 @@ const PatientList = ({ onPatientSelect }) => {
               ))}
             </tbody>
           </table>
-        </figure>
+        </div>
       </article>
     </>
   );

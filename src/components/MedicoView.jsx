@@ -18,8 +18,8 @@ const MedicoView = ({ usuario, handleLogout }) => {
 
     const handleFinalize = async (patientDocId) => {
         if(window.confirm("¿Seguro que quieres finalizar este tratamiento?")) {
-            const patientDocRef = doc(db, "patients", patientDocId);
-            await updateDoc(patientDocRef, { status: "Finalizado" });
+          const patientDocRef = doc(db, "patients", patientDocId);
+          await updateDoc(patientDocRef, { status: "Finalizado" });
         }
     };
 
@@ -35,8 +35,8 @@ const MedicoView = ({ usuario, handleLogout }) => {
             </nav>
             <main>
                 <h3>Lista de Pacientes Activos</h3>
-                <figure>
-                    <table>
+                <div style={{ overflowX: 'auto' }}>
+                    <table role="grid">
                         <thead>
                             <tr>
                                 <th scope="col">Nombre</th>
@@ -52,18 +52,16 @@ const MedicoView = ({ usuario, handleLogout }) => {
                                     <td>{patient.id}</td>
                                     <td>{patient.status}</td>
                                     <td>
-                                        <div className="grid">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                                             <button onClick={() => setSelectedPatient(patient)}>Ver Historial</button>
-                                            {patient.status === 'Activo' && (
-                                                <button className="contrast" onClick={() => handleFinalize(patient.docId)}>Finalizar</button>
-                                            )}
+                                            <button style={{ backgroundColor: 'var(--pico-color-red-500)'}} className="contrast" onClick={() => handleFinalize(patient.docId)}>Finalizar</button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                </figure>
+                </div>
             </main>
         </div>
     );
