@@ -1,4 +1,3 @@
-// src/components/StaffList.jsx
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, onSnapshot } from 'firebase/firestore';
@@ -13,36 +12,33 @@ const StaffList = () => {
     });
     return () => unsubscribe();
   }, []);
-  
-  const styles = {
-    container: { marginTop: '30px' },
-    table: { width: '100%', borderCollapse: 'collapse', marginTop: '10px' },
-    th: { border: '1px solid #ddd', padding: '8px', backgroundColor: '#f2f2f2', textAlign: 'left' },
-    td: { border: '1px solid #ddd', padding: '8px' }
-  };
 
   return (
-    <div style={styles.container}>
-      <h3>Personal Registrado</h3>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th style={styles.th}>Nombre</th>
-            <th style={styles.th}>Email</th>
-            <th style={styles.th}>Rol</th>
-          </tr>
-        </thead>
-        <tbody>
-          {staff.map(member => (
-            <tr key={member.id}>
-              <td style={styles.td}>{member.nombre}</td>
-              <td style={styles.td}>{member.email}</td>
-              <td style={styles.td}>{member.rol}</td>
+    <article>
+      <h4>Personal Registrado</h4>
+      <figure>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Email</th>
+              <th scope="col">Rol</th>
+              <th scope="col">Admin</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {staff.map(member => (
+              <tr key={member.id}>
+                <td>{member.nombre}</td>
+                <td>{member.email}</td>
+                <td>{member.rol}</td>
+                <td>{member.isAdmin ? 'Sí' : 'No'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </figure>
+    </article>
   );
 };
 

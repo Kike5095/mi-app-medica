@@ -1,8 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { auth } from '../firebaseConfig';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      setError("Error al registrar: " + err.message);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      setError("Error al iniciar sesión: " + err.message);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -12,64 +36,37 @@ const Login = () => {
     }
   };
 
-  // Estilos en formato de objeto de JavaScript
-  const styles = {
-    container: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      backgroundColor: '#f0f2f5',
-    },
-    card: {
-      padding: '40px',
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      textAlign: 'center',
-      width: '400px',
-    },
-    title: {
-      fontSize: '2rem',
-      fontWeight: 'bold',
-      marginBottom: '8px',
-    },
-    subtitle: {
-      color: '#666',
-      marginBottom: '24px',
-    },
-    button: {
-      backgroundColor: '#1877f2',
-      color: 'white',
-      fontWeight: 'bold',
-      padding: '10px 20px',
-      borderRadius: '8px',
-      border: 'none',
-      cursor: 'pointer',
-      width: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '1rem',
-    },
-    googleIcon: {
-      width: '24px',
-      height: '24px',
-      marginRight: '12px',
-    }
-  };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>App Médica</h1>
-        <p style={styles.subtitle}>Por favor, inicia sesión para continuar</p>
-        <button style={styles.button} onClick={handleGoogleLogin}>
-          <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google icon" style={styles.googleIcon} />
-          Ingresar con Google
+    <main className="container">
+      <article>
+        <h1 align="center">App Médica</h1>
+        <form>
+          <input 
+            type="email" 
+            placeholder="Correo electrónico" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input 
+            type="password" 
+            placeholder="Contraseña" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <div className="grid">
+            <button onClick={handleLogin}>Iniciar Sesión</button>
+            <button className="secondary" onClick={handleSignUp}>Registrarse</button>
+          </div>
+        </form>
+        <p align="center">o</p>
+        <button className="contrast" onClick={handleGoogleLogin}>
+          Continuar con Google
         </button>
-      </div>
-    </div>
+        {error && <p style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
+      </article>
+    </main>
   );
 };
 
