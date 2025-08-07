@@ -17,10 +17,9 @@ const PatientForm = () => {
             await addDoc(collection(db, "patients"), {
                 name: patientName,
                 id: patientId,
-                // Ya no guardamos el email de la auxiliar aquí
                 treatmentEndDate: new Date(endDate),
                 createdAt: new Date(),
-                status: 'Pendiente'
+                status: 'Activo' // <-- CAMBIO REALIZADO AQUÍ
             });
             alert("¡Paciente guardado con éxito!");
             setPatientName('');
