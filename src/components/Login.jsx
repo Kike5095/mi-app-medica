@@ -25,7 +25,7 @@ const Login = ({ onLoginSuccess }) => {
       }
     } catch (err) {
       console.error("Error en la consulta:", err);
-      setError("Error al verificar la cédula. Revisa la consola.");
+      setError("Error al verificar la cédula. Revisa la consola de errores (F12).");
     }
     setIsLoading(false);
   };
