@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
+// Configuración de Firebase (rellena con tus valores)
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
   authDomain: "TU_AUTH_DOMAIN",
@@ -12,12 +13,12 @@ const firebaseConfig = {
   appId: "TU_APP_ID"
 };
 
-// Inicializar Firebase
+// Inicializar la app
 const app = initializeApp(firebaseConfig);
 
-// Inicializar Firestore y Auth
+// Inicializar servicios
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Exportar para que otros componentes puedan usarlo
-export { db, auth };
+// Exportar todo lo necesario para evitar errores de importación
+export { app, db, auth };
