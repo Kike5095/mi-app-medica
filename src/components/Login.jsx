@@ -15,13 +15,17 @@ const Login = ({ onLoginSuccess }) => {
     setError('');
     
     const q = query(collection(db, "personal"), where("cedula", "==", cedula.trim()));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-      setNeedsRegistration(true);
-    } else {
-      const userProfile = querySnapshot.docs[0].data();
-      onLoginSuccess(userProfile);
+    try {
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        setNeedsRegistration(true);
+      } else {
+        const userProfile = querySnapshot.docs[0].data();
+        onLoginSuccess(userProfile);
+      }
+    } catch (err) {
+      console.error("Error en la consulta:", err);
+      setError("Error al verificar la cédula. Revisa la consola.");
     }
     setIsLoading(false);
   };
