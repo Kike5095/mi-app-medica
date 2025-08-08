@@ -1,50 +1,66 @@
-import React, { useState } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import Register from './Register.jsx';
+// Login.jsx
+import React, { useState } from "react";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { app } from "../firebaseConfig"; // tu configuración
+
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 const Login = ({ onLoginSuccess }) => {
-  const [cedula, setCedula] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [needsRegistration, setNeedsRegistration] = useState(false);
+  const [cedula, setCedula] = useState("");
+  const [error, setError] = useState("");
 
   const handleCedulaSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    
-    const q = query(collection(db, "personal"), where("cedula", "==", cedula.trim()));
+    setError("");
+
     try {
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) {
-        setNeedsRegistration(true);
+      // 🔹 1. Hacer login como tú (super admin)
+      const email = "doctorcorreap@gmail.com";
+      const password = "TU_CONTRASEÑA"; // cámbialo por la real
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      const uid = userCredential.user.uid;
+      console.log("✅ Sesión iniciada como:", uid);
+
+      // 🔹 2. Verificar rol
+      const docRef = doc(db, "personal", uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log("📄 Datos usuario:", data);
+
+        if (data.rol === "Médico" || data.rol === "Administrador") {
+          // 🔹 3. Aquí puedes verificar la cédula ingresada
+          console.log("✅ Permiso otorgado, cédula ingresada:", cedula);
+          onLoginSuccess();
+        } else {
+          setError("No tienes permisos para acceder.");
+        }
       } else {
-        const userProfile = querySnapshot.docs[0].data();
-        onLoginSuccess(userProfile);
+        setError("No se encontró tu usuario en la base de datos.");
       }
     } catch (err) {
-      console.error("Error en la consulta:", err);
-      setError("Error al verificar la cédula. Revisa la consola de errores (F12).");
+      console.error(err);
+      setError("Error de autenticación o permisos.");
     }
-    setIsLoading(false);
   };
 
-  if (needsRegistration) {
-    return <Register cedula={cedula} onLoginSuccess={onLoginSuccess} />;
-  }
-  
   return (
-    <main className="container" style={{ maxWidth: '450px', marginTop: '5rem' }}>
-      <article>
-        <h1 align="center">Programa de Hospitalización Domiciliaria</h1>
-        <form onSubmit={handleCedulaSubmit}>
-          <label>Ingresa tu Cédula para Continuar</label>
-          <input type="text" value={cedula} onChange={(e) => setCedula(e.target.value)} placeholder="Número de Cédula" required />
-          <button type="submit" aria-busy={isLoading}>{isLoading ? 'Verificando...' : 'Ingresar'}</button>
-        </form>
-        {error && <p style={{ color: 'var(--pico-color-red-500)' }}>{error}</p>}
-      </article>
+    <main>
+      <h1 align="center">Programa de Hospitalización Domiciliaria</h1>
+      <form onSubmit={handleCedulaSubmit}>
+        <label>Ingresa tu Cédula para Continuar</label>
+        <input
+          type="text"
+          value={cedula}
+          onChange={(e) => setCedula(e.target.value)}
+        />
+        <button type="submit">Ingresar</button>
+      </form>
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </main>
   );
 };
