@@ -5,12 +5,12 @@ import { getAuth } from "firebase/auth";
 
 // Configuración de Firebase (rellena con tus valores)
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyD5qQ2fQN7fZoQ4zvjDfsdzO1wTmI5oNF4",
+  authDomain: "mi-app-medica-ef3fa.firebaseapp.com",
+  projectId: "mi-app-medica-ef3fa",
+  storageBucket: "mi-app-medica-ef3fa.firebasestorage.app",
+  messagingSenderId: "713331216336",
+  appId: "1:713331216336:web:db2026dfc8b98c60c133d5"
 };
 
 // Inicializar la app
