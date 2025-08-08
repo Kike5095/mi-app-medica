@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 
-// Este componente recibe la cédula que no se encontró y la función onLoginSuccess
 const Register = ({ cedula, onLoginSuccess }) => {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
@@ -13,13 +12,12 @@ const Register = ({ cedula, onLoginSuccess }) => {
     setIsLoading(true);
     try {
       const newUserProfile = {
-        nombre,
-        email,
-        cedula,
-        rol: "Auxiliar", // Todos se registran como Auxiliar por defecto
+        nombre: nombre,
+        email: email,
+        cedula: cedula,
+        rol: "Auxiliar", // Rol por defecto
       };
       await addDoc(collection(db, "personal"), newUserProfile);
-      // Después de registrar, "iniciamos sesión" con el perfil recién creado
       onLoginSuccess(newUserProfile);
     } catch (err) {
       alert("Error al registrar: " + err.message);
@@ -37,9 +35,7 @@ const Register = ({ cedula, onLoginSuccess }) => {
         <form onSubmit={handleRegisterSubmit}>
           <label>Nombre Completo<input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required /></label>
           <label>Correo Electrónico<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-          <label>Rol (asignado por defecto)</label>
-          <input type="text" value="Auxiliar" disabled />
-          <button type="submit" aria-busy={isLoading}>{isLoading ? 'Completar Registro' : 'Registrar y Entrar'}</button>
+          <button type="submit" aria-busy={isLoading}>{isLoading ? 'Registrando...' : 'Registrar y Entrar'}</button>
         </form>
       </article>
     </main>
