@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
-import { collection, query, where, onSnapshot } from 'firebase/firestore'; // Cambiamos getDocs por onSnapshot
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'; // onSnapshot añadido
 import { signOut } from 'firebase/auth';
 import AdminView from './AdminView.jsx';
 import AuxiliarView from './AuxiliarView.jsx';
@@ -13,18 +13,14 @@ const Dashboard = ({ usuario }) => {
     useEffect(() => {
         if (usuario) {
             const q = query(collection(db, "personal"), where("email", "==", usuario.email));
-
-            // onSnapshot se queda escuchando en tiempo real
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
                 if (!querySnapshot.empty) {
                     setUserProfile(querySnapshot.docs[0].data());
                 } else {
-                    // Si no lo encuentra, no hacemos nada todavía, esperamos a que la función lo cree.
-                    // Podemos dejar un estado temporal de "cargando" o "verificando".
-                    setUserProfile(null); // Forzamos el estado de carga
+                    setUserProfile({ rol: 'Desconocido' });
                 }
             });
-            return () => unsubscribe(); // Limpiamos el listener al salir
+            return () => unsubscribe();
         }
     }, [usuario]);
 
@@ -37,26 +33,30 @@ const Dashboard = ({ usuario }) => {
     };
 
     if (!userProfile) {
-        return <div>Verificando permisos...</div>;
+        return <div className="container" aria-busy="true">Verificando permisos...</div>;
     }
 
+    // --- LÓGICA DE ROLES ACTUALIZADA ---
+
+    // 1. Condición especial para el Super Admin
+    if (userProfile.email === 'doctorcorreap@gmail.com') {
+        return <AdminView usuario={userProfile} handleLogout={handleLogout} />;
+    }
+
+    // 2. Lógica para el resto de los usuarios
     switch (userProfile.rol) {
-        case 'Médico': // Super Admin
-            return <AdminView usuario={usuario} handleLogout={handleLogout} />;
         case 'Jefe de Enfermería':
         case 'Auxiliar Admin':
-            return <AdminRestringidoView usuario={usuario} handleLogout={handleLogout} />;
+            return <AdminRestringidoView usuario={userProfile} handleLogout={handleLogout} />;
+        case 'Médico':
+            return <MedicoView usuario={userProfile} handleLogout={handleLogout} />;
         case 'Auxiliar':
-            return <AuxiliarView usuario={usuario} handleLogout={handleLogout} />;
+            return <AuxiliarView usuario={userProfile} handleLogout={handleLogout} />;
         default:
-             // Este caso es para los médicos que no son super admin
-            if (userProfile.rol === 'Medico') {
-                 return <MedicoView usuario={usuario} handleLogout={handleLogout} />;
-            }
             return (
-                <div>
+                <div className="container">
                     <h1>Acceso Denegado</h1>
-                    <p>Tu rol no está reconocido o aún no ha sido asignado. Por favor, contacta a un administrador.</p>
+                    <p>Tu rol no está reconocido en el sistema.</p>
                     <button onClick={handleLogout}>Cerrar Sesión</button>
                 </div>
             );
