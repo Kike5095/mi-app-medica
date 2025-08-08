@@ -1,34 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { auth } from './firebaseConfig';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard'; // Importamos el nuevo Dashboard
+import React, { useState } from 'react';
+// Ya no necesitamos Firebase Auth aquí
+import Login from './components/Login.jsx'; 
+import Dashboard from './components/Dashboard.jsx';
 
 function App() {
-  const [usuario, setUsuario] = useState(null);
+  // Nuestro "usuario" ahora es el perfil que guardamos de Firestore
+  const [userProfile, setUserProfile] = useState(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUsuario(user);
-      } else {
-        setUsuario(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error al cerrar sesión", error);
-    }
+  // Función para que el Login nos "pase" el usuario que encontró
+  const handleLoginSuccess = (profile) => {
+    setUserProfile(profile);
   };
 
-  // Si hay un usuario, muestra el Dashboard y le pasa la info del usuario.
-  // Si no, muestra el Login.
-  return usuario ? <Dashboard usuario={usuario} handleLogout={handleLogout} /> : <Login />;
+  // Función para cerrar sesión (simplemente borra el perfil)
+  const handleLogout = () => {
+    setUserProfile(null);
+  };
+
+  // Si hay un perfil guardado, muestra el Dashboard. Si no, muestra el Login.
+  return userProfile 
+    ? <Dashboard usuario={userProfile} handleLogout={handleLogout} /> 
+    : <Login onLoginSuccess={handleLoginSuccess} />;
 }
 
 export default App;
