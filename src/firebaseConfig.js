@@ -1,22 +1,18 @@
-// Import the functions you need from the SDKs you need
+// Importa funciones necesarias de Firebase
 import { initializeApp } from "firebase/app";
-// ESTAS LÍNEAS FALTABAN
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 
-// Your web app's Firebase configuration
+// Tu configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyD5qQ2fQN7fZoQ4zvjDfsdzO1wTmI5oNF4",
-  authDomain: "mi-app-medica-ef3fa.firebaseapp.com",
-  projectId: "mi-app-medica-ef3fa",
-  storageBucket: "mi-app-medica-ef3fa.firebasestorage.app",
-  messagingSenderId: "713331216336",
-  appId: "1:713331216336:web:db2026dfc8b98c60c133d5"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH_DOMAIN",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_STORAGE_BUCKET",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
 };
 
-// Initialize Firebase
+// Inicializa la app
 const app = initializeApp(firebaseConfig);
 
-// --- Y ESTAS LÍNEAS DE EXPORTACIÓN TAMBIÉN FALTABAN ---
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Exporta la app para usarla en otros componentes
+export { app };
