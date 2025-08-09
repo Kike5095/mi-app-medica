@@ -18,32 +18,30 @@ export default function Login() {
 
     setCargando(true);
     try {
-      // 1) Autenticación (anónima o la que uses)
+      // 1) Autenticación (anónima)
       await ensureAuth();
 
-      // 2) Buscar en Firestore por CAMPO "cedula" (IDs en personal son automáticos)
+      // 2) Buscar en "personal" por CAMPO cedula
       const q = query(collection(db, "personal"), where("cedula", "==", ced));
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        // No está registrado → ir a registro con la cédula pre-llenada
+        // No registrado → ir a registro con la cédula precargada
         navigate(`/registrar?cedula=${encodeURIComponent(ced)}`);
         return;
       }
 
       const data = snap.docs[0].data();
 
-      // 3) Guardar sesión local
+      // 3) Guardar sesión y redirigir por rol
       localStorage.setItem("user", JSON.stringify(data));
 
-      // 4) Redirigir por rol
       const rol = (data.rol || "").toLowerCase();
       if (rol.includes("medico") || rol.includes("médico")) {
         navigate("/medico", { state: { user: data } });
       } else if (rol.includes("admin") || rol.includes("administrador")) {
         navigate("/admin", { state: { user: data } });
       } else {
-        // Por defecto, Auxiliar
         navigate("/auxiliar", { state: { user: data } });
       }
     } catch (err) {

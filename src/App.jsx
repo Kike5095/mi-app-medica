@@ -1,17 +1,21 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
+
+// Páginas / vistas
 import Login from "./components/Login.jsx";
 import Register from "./components/Register.jsx";
 import AdminView from "./components/AdminView.jsx";
 import MedicoView from "./components/MedicoView.jsx";
 import AuxiliarView from "./components/AuxiliarView.jsx";
+
+// Guards
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import RoleRoute from "./components/RoleRoute.jsx";
 
 export default function App() {
   return (
     <Routes>
-      {/* Público */}
+      {/* Rutas públicas */}
       <Route path="/" element={<Login />} />
       <Route path="/registrar" element={<Register />} />
 
@@ -42,7 +46,7 @@ export default function App() {
       {/* Auxiliar */}
       <Route
         path="/auxiliar"
-        element{
+        element={
           <ProtectedRoute>
             <RoleRoute allow={["auxiliar"]}>
               <AuxiliarView />

@@ -1,19 +1,27 @@
 // src/components/AuxiliarView.jsx
-import { useLocation, Link } from "react-router-dom";
+import { useState } from "react";
 import LogoutButton from "./LogoutButton";
+import PatientSearch from "./PatientSearch.jsx";
+import PatientVitals from "./PatientVitals.jsx"; // o DataEntryView.jsx
+import { getPatient, addVitals } from "../lib/patients";
 
 export default function AuxiliarView() {
-  const { state } = useLocation();
-  const user = state?.user || JSON.parse(localStorage.getItem("user") || "null");
+  const [paciente, setPaciente] = useState(null);
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
-  if (!user) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h2>Panel del Auxiliar</h2>
-        <p>No hay datos de usuario. Vuelve al <Link to="/">inicio de sesión</Link>.</p>
-      </div>
-    );
-  }
+  const onSearch = async (cedula) => {
+    const p = await getPatient(cedula);
+    setPaciente(p || null);
+  };
+
+  const onSaveVitals = async (values) => {
+    if (!paciente) return;
+    await addVitals(paciente.cedula, values, {
+      creadoPorCedula: user?.cedula,
+      creadoPorRol: user?.rol,
+    });
+    alert("Signos guardados");
+  };
 
   return (
     <div style={{ padding: 24 }}>
@@ -22,18 +30,16 @@ export default function AuxiliarView() {
         <LogoutButton />
       </header>
 
-      <section style={{ marginTop: 12 }}>
-        <p><strong>Nombre:</strong> {user.nombre}</p>
-        <p><strong>Cédula:</strong> {user.cedula}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Rol:</strong> {user.rol}</p>
-      </section>
+      <PatientSearch onSearch={onSearch} />
 
-      {/* TODO: Sprint 1
-          - Buscar paciente por cédula
-          - Form de signos vitales (fc, fr, tensión sys/dia, sat, temp) + nota de enfermería
-          - Guardar en patients/{cedula}/vitals/{autoId}
-      */}
+      {paciente ? (
+        <>
+          <h3>Paciente: {paciente.nombre} {paciente.apellido} — {paciente.cedula}</h3>
+          <PatientVitals onSubmit={onSaveVitals} />
+        </>
+      ) : (
+        <p>Busca un paciente por cédula…</p>
+      )}
     </div>
   );
 }
