@@ -1,103 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, query, onSnapshot, orderBy, doc, updateDoc } from 'firebase/firestore';
-import PatientHistory from './PatientHistory.jsx';
+import { useLocation, Link } from "react-router-dom";
+import LogoutButton from "./LogoutButton";
 
-const MedicoView = ({ usuario, handleLogout }) => {
-    const [allPatients, setAllPatients] = useState([]);
-    const [selectedPatient, setSelectedPatient] = useState(null);
+export default function MedicoView() {
+  const { state } = useLocation();
+  const user = state?.user || JSON.parse(localStorage.getItem("user") || "null");
 
-    const finalizeTreatment = async (patient) => {
-        await updateDoc(doc(db, 'patients', patient.docId), { status: 'Finalizado' });
-    };
-
-    useEffect(() => {
-        // Traemos TODOS los pacientes, ordenados por estado y luego por fecha
-        const q = query(collection(db, "patients"), orderBy("status"), orderBy("createdAt", "desc"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const patientsData = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
-            setAllPatients(patientsData);
-        });
-        return () => unsubscribe();
-    }, []);
-
-    if (selectedPatient) {
-        return <PatientHistory patient={selectedPatient} onBack={() => setSelectedPatient(null)} />;
-    }
-
-    // Filtramos las listas aquí en el código
-    const activePatients = allPatients.filter(p => p.status !== 'Finalizado');
-    const finishedPatients = allPatients.filter(p => p.status === 'Finalizado');
-
+  if (!user) {
     return (
-        <div className="container">
-            <nav>
-                <ul><li><strong>Panel de Médico</strong></li></ul>
-                <ul><li>{usuario.email}</li><li><button className="secondary" onClick={handleLogout}>Cerrar Sesión</button></li></ul>
-            </nav>
-            <main>
-                {/* LISTA DE PACIENTES ACTIVOS */}
-                <article>
-                    <h4>Pacientes Activos y Pendientes</h4>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table role="grid">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Nombre</th>
-                                    <th scope="col">Cédula</th>
-                                    <th scope="col">Estado</th>
-                                    <th scope="col">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {activePatients.map(patient => (
-                                    <tr key={patient.docId}>
-                                        <td>{patient.name}</td>
-                                        <td>{patient.id}</td>
-                                        <td>{patient.status}</td>
-                                        <td>
-                                            <button onClick={() => setSelectedPatient(patient)}>Ver Historial</button>
-                                            <button className="secondary" onClick={() => finalizeTreatment(patient)}>
-                                                Finalizar Tratamiento
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-
-                {/* LISTA DE PACIENTES FINALIZADOS */}
-                <article>
-                    <h4>Historial de Pacientes Finalizados</h4>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table role="grid">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Nombre</th>
-                                    <th scope="col">Cédula</th>
-                                    <th scope="col">Estado</th>
-                                    <th scope="col">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {finishedPatients.map(patient => (
-                                    // Le aplicamos un estilo gris a las filas de pacientes finalizados
-                                    <tr key={patient.docId} style={{ opacity: 0.6 }}>
-                                        <td>{patient.name}</td>
-                                        <td>{patient.id}</td>
-                                        <td>{patient.status}</td>
-                                        <td><button className="secondary" onClick={() => setSelectedPatient(patient)}>Ver Historial</button></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-            </main>
-        </div>
+      <div style={{ padding: 24 }}>
+        <h2>Panel del Médico</h2>
+        <p>No hay datos de usuario. Vuelve al <Link to="/">inicio de sesión</Link>.</p>
+      </div>
     );
-};
+  }
 
-export default MedicoView;
+  return (
+    <div style={{ padding: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+        <h2>Panel del Médico</h2>
+        <LogoutButton />
+      </div>
+      <p><strong>Nombre:</strong> {user.nombre}</p>
+      <p><strong>Cédula:</strong> {user.cedula}</p>
+      <p><strong>Email:</strong> {user.email}</p>
+      <p><strong>Rol:</strong> {user.rol}</p>
+    </div>
+  );
+}

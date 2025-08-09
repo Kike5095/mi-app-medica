@@ -1,58 +1,38 @@
-import React, { useState } from 'react';
-import PatientForm from './PatientForm.jsx';
-import PatientList from './PatientList.jsx';
-import MedicoView from './MedicoView.jsx';
-import AuxiliarView from './AuxiliarView.jsx';
-import PatientHistory from './PatientHistory.jsx';
+// src/components/AdminView.jsx
+import { useLocation, Link } from "react-router-dom";
+import LogoutButton from "./LogoutButton";
 
-const AdminView = ({ usuario, handleLogout }) => {
-  const [viewMode, setViewMode] = useState('admin');
-  const [selectedPatient, setSelectedPatient] = useState(null);
+export default function AdminView() {
+  const { state } = useLocation();
+  const user = state?.user || JSON.parse(localStorage.getItem("user") || "null");
 
-  if (selectedPatient) {
-    return <PatientHistory patient={selectedPatient} onBack={() => setSelectedPatient(null)} />;
+  if (!user) {
+    return (
+      <div style={{ padding: 24 }}>
+        <h2>Panel del Administrador</h2>
+        <p>No hay datos de usuario. Vuelve al <Link to="/">inicio de sesión</Link>.</p>
+      </div>
+    );
   }
 
-  const renderCurrentView = () => {
-    switch (viewMode) {
-      case 'medico':
-        return <MedicoView usuario={usuario} handleLogout={handleLogout} />;
-      case 'auxiliar':
-        return <AuxiliarView usuario={usuario} handleLogout={handleLogout} />;
-      case 'admin':
-      default:
-        return (
-          <main>
-            <section>
-              <h2>Gestión de Pacientes</h2>
-              <PatientForm />
-              <PatientList onPatientSelect={(patient) => setSelectedPatient(patient)} />
-            </section>
-            {/* Ya no hay sección de Gestión de Personal aquí */}
-          </main>
-        );
-    }
-  };
-
   return (
-    <div className="container">
-      <nav>
-        <ul><li><strong>Panel de Super-Administrador</strong></li></ul>
-        <ul><li>{usuario.email}</li><li><button className="secondary" onClick={handleLogout}>Cerrar Sesión</button></li></ul>
-      </nav>
+    <div style={{ padding: 24 }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Panel del Administrador</h2>
+        <LogoutButton />
+      </header>
 
-      <nav>
-        <ul>
-          <li><strong>Simular Vista Como:</strong></li>
-          <li><button className={viewMode === 'admin' ? '' : 'secondary'} onClick={() => setViewMode('admin')}>Administrador</button></li>
-          <li><button className={viewMode === 'medico' ? '' : 'secondary'} onClick={() => setViewMode('medico')}>Médico</button></li>
-          <li><button className={viewMode === 'auxiliar' ? '' : 'secondary'} onClick={() => setViewMode('auxiliar')}>Auxiliar</button></li>
-        </ul>
-      </nav>
+      <section style={{ marginTop: 12 }}>
+        <p><strong>Nombre:</strong> {user.nombre}</p>
+        <p><strong>Cédula:</strong> {user.cedula}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Rol:</strong> {user.rol}</p>
+      </section>
 
-      {renderCurrentView()}
+      {/* TODO: Sprint 1
+          - Form para crear paciente (nombre, apellido, cédula, estado=pending)
+          - Lista por estado (pendiente/activo/finalizado) con acciones Activar/Finalizar
+      */}
     </div>
   );
-};
-
-export default AdminView;
+}

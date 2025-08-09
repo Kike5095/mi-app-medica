@@ -1,32 +1,58 @@
-import React, { useState } from 'react';
-import Login from './components/Login.jsx';
-import Dashboard from './components/Dashboard.jsx';
-import Register from './components/Register.jsx';
+// src/App.jsx
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./components/Login.jsx";
+import Register from "./components/Register.jsx";
+import AdminView from "./components/AdminView.jsx";
+import MedicoView from "./components/MedicoView.jsx";
+import AuxiliarView from "./components/AuxiliarView.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import RoleRoute from "./components/RoleRoute.jsx";
 
-function App() {
-  const [userProfile, setUserProfile] = useState(null);
-  const [pendingRegister, setPendingRegister] = useState(null);
+export default function App() {
+  return (
+    <Routes>
+      {/* Público */}
+      <Route path="/" element={<Login />} />
+      <Route path="/registrar" element={<Register />} />
 
-  const handleLoginSuccess = (profile) => {
-    setUserProfile(profile);
-  };
+      {/* Admin */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allow={["admin", "administrador"]}>
+              <AdminView />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
 
-  const handleRegisterRedirect = (data) => {
-    setPendingRegister(data);
-  };
+      {/* Médico */}
+      <Route
+        path="/medico"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allow={["medico", "médico"]}>
+              <MedicoView />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
 
-  const handleLogout = () => {
-    setUserProfile(null);
-    setPendingRegister(null);
-  };
+      {/* Auxiliar */}
+      <Route
+        path="/auxiliar"
+        element{
+          <ProtectedRoute>
+            <RoleRoute allow={["auxiliar"]}>
+              <AuxiliarView />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
 
-  if (pendingRegister) {
-    return <Register cedulaInicial={pendingRegister.cedula} onRegisterComplete={setUserProfile} />;
-  }
-
-  return userProfile
-    ? <Dashboard usuario={userProfile} handleLogout={handleLogout} />
-    : <Login onLoginSuccess={handleLoginSuccess} onRegisterRedirect={handleRegisterRedirect} />;
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
-
-export default App;

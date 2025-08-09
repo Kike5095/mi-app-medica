@@ -1,57 +1,91 @@
-import React, { useState } from "react";
-import { db } from "../firebaseConfig";
+// src/components/Login.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ensureAuth, db } from "../firebaseConfig";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
-const Login = ({ onLoginSuccess }) => {
+export default function Login() {
   const [cedula, setCedula] = useState("");
-  const [mensaje, setMensaje] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMensaje("");
+    setError("");
+    const ced = String(cedula).trim();
+    if (!ced) return;
 
-    if (!cedula.trim()) {
-      setMensaje("Por favor ingresa tu cédula.");
-      return;
-    }
-
+    setCargando(true);
     try {
-      // Buscar en colección "personal" por cédula
-      const q = query(collection(db, "personal"), where("cedula", "==", cedula));
-      const querySnapshot = await getDocs(q);
+      // 1) Autenticación (anónima o la que uses)
+      await ensureAuth();
 
-      if (!querySnapshot.empty) {
-        // Usuario encontrado
-        const userData = querySnapshot.docs[0].data();
-        onLoginSuccess(userData);
-      } else {
-        // Usuario no encontrado → ir al registro
-        setMensaje("Usuario no encontrado. Redirigiendo a registro...");
-        setTimeout(() => {
-          window.location.href = "/register?cedula=" + cedula;
-        }, 1500);
+      // 2) Buscar en Firestore por CAMPO "cedula" (IDs en personal son automáticos)
+      const q = query(collection(db, "personal"), where("cedula", "==", ced));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        // No está registrado → ir a registro con la cédula pre-llenada
+        navigate(`/registrar?cedula=${encodeURIComponent(ced)}`);
+        return;
       }
-    } catch (error) {
-      console.error("Error al iniciar sesión:", error);
-      setMensaje("Ocurrió un error al iniciar sesión.");
+
+      const data = snap.docs[0].data();
+
+      // 3) Guardar sesión local
+      localStorage.setItem("user", JSON.stringify(data));
+
+      // 4) Redirigir por rol
+      const rol = (data.rol || "").toLowerCase();
+      if (rol.includes("medico") || rol.includes("médico")) {
+        navigate("/medico", { state: { user: data } });
+      } else if (rol.includes("admin") || rol.includes("administrador")) {
+        navigate("/admin", { state: { user: data } });
+      } else {
+        // Por defecto, Auxiliar
+        navigate("/auxiliar", { state: { user: data } });
+      }
+    } catch (err) {
+      console.error("Error al iniciar sesión:", err);
+      setError("Ocurrió un error al iniciar sesión.");
+    } finally {
+      setCargando(false);
     }
   };
 
   return (
-    <div className="container">
-      <h2>Ingreso de Personal</h2>
-      <form onSubmit={handleLogin}>
-        <label>Cédula:</label>
-        <input
-          type="text"
-          value={cedula}
-          onChange={(e) => setCedula(e.target.value)}
-        />
-        <button type="submit">Ingresar</button>
-      </form>
-      {mensaje && <p>{mensaje}</p>}
-    </div>
-  );
-};
+    <form onSubmit={handleSubmit} style={{ maxWidth: 420, marginTop: 16 }}>
+      <h1>Ingreso de Personal</h1>
 
-export default Login;
+      <label style={{ display: "block", margin: "8px 0 4px" }}>Cédula:</label>
+      <input
+        type="text"
+        value={cedula}
+        onChange={(e) => setCedula(e.target.value)}
+        placeholder="Ingrese su cédula"
+        style={{ width: "100%", padding: 10, fontSize: 16 }}
+      />
+
+      <button
+        type="submit"
+        disabled={cargando || !cedula.trim()}
+        style={{
+          marginTop: 12,
+          width: "100%",
+          padding: 12,
+          fontSize: 16,
+          background: "#0b6aa2",
+          color: "white",
+          border: "none",
+          borderRadius: 6,
+          cursor: cargando ? "not-allowed" : "pointer",
+        }}
+      >
+        {cargando ? "Verificando..." : "Ingresar"}
+      </button>
+
+      {error && <p style={{ color: "crimson", marginTop: 12 }}>{error}</p>}
+    </form>
+  );
+}
