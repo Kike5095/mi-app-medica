@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
@@ -8,6 +8,11 @@ ChartJS.register( CategoryScale, LinearScale, PointElement, LineElement, Title, 
 
 const PatientHistory = ({ patient, onBack }) => {
   const [vitals, setVitals] = useState([]);
+
+  const finalizeTreatment = async () => {
+    await updateDoc(doc(db, 'patients', patient.docId), { status: 'Finalizado' });
+    onBack();
+  };
 
   useEffect(() => {
     const vitalsColRef = collection(db, "patients", patient.docId, "vitals");
@@ -31,7 +36,12 @@ const PatientHistory = ({ patient, onBack }) => {
     <main className="container">
       <nav>
         <ul><li><button className="secondary outline" onClick={onBack}>&larr; Volver a la lista</button></li></ul>
-        <ul><li><h2>Historial de: {patient.name}</h2></li></ul>
+        <ul>
+          <li><h2>Historial de: {patient.name}</h2></li>
+          {patient.status !== 'Finalizado' && (
+            <li><button onClick={finalizeTreatment}>Finalizar Tratamiento</button></li>
+          )}
+        </ul>
       </nav>
       
       {vitals.length > 1 && (

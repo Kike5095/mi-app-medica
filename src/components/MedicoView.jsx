@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy, doc, updateDoc } from 'firebase/firestore';
 import PatientHistory from './PatientHistory.jsx';
 
 const MedicoView = ({ usuario, handleLogout }) => {
     const [allPatients, setAllPatients] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
+
+    const finalizeTreatment = async (patient) => {
+        await updateDoc(doc(db, 'patients', patient.docId), { status: 'Finalizado' });
+    };
 
     useEffect(() => {
         // Traemos TODOS los pacientes, ordenados por estado y luego por fecha
@@ -51,7 +55,12 @@ const MedicoView = ({ usuario, handleLogout }) => {
                                         <td>{patient.name}</td>
                                         <td>{patient.id}</td>
                                         <td>{patient.status}</td>
-                                        <td><button onClick={() => setSelectedPatient(patient)}>Ver Historial</button></td>
+                                        <td>
+                                            <button onClick={() => setSelectedPatient(patient)}>Ver Historial</button>
+                                            <button className="secondary" onClick={() => finalizeTreatment(patient)}>
+                                                Finalizar Tratamiento
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
