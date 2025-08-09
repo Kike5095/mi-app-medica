@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore'; // onSnapshot añadido
-import { signOut } from 'firebase/auth';
+import { db } from '../firebaseConfig';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import AdminView from './AdminView.jsx';
 import AuxiliarView from './AuxiliarView.jsx';
 import MedicoView from './MedicoView.jsx';
 import AdminRestringidoView from './AdminRestringidoView.jsx';
 
-const Dashboard = ({ usuario }) => {
+const Dashboard = ({ usuario, handleLogout }) => {
     const [userProfile, setUserProfile] = useState(null);
 
     useEffect(() => {
-        if (usuario) {
-            const q = query(collection(db, "personal"), where("email", "==", usuario.email));
+        if (usuario && usuario.cedula) {
+            const q = query(collection(db, "personal"), where("cedula", "==", usuario.cedula));
             const unsubscribe = onSnapshot(q, (querySnapshot) => {
                 if (!querySnapshot.empty) {
                     setUserProfile(querySnapshot.docs[0].data());
@@ -24,26 +23,16 @@ const Dashboard = ({ usuario }) => {
         }
     }, [usuario]);
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-        } catch (error) {
-            console.error("Error al cerrar sesión", error);
-        }
-    };
-
     if (!userProfile) {
         return <div className="container" aria-busy="true">Verificando permisos...</div>;
     }
 
-    // --- LÓGICA DE ROLES ACTUALIZADA ---
-
-    // 1. Condición especial para el Super Admin
-    if (userProfile.email === 'doctorcorreap@gmail.com') {
+    // Super admin
+    if (userProfile.cedula === '1234567890') { // Cambia por tu cédula de admin
         return <AdminView usuario={userProfile} handleLogout={handleLogout} />;
     }
 
-    // 2. Lógica para el resto de los usuarios
+    // Roles
     switch (userProfile.rol) {
         case 'Jefe de Enfermería':
         case 'Auxiliar Admin':

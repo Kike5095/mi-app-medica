@@ -1,55 +1,101 @@
-import React, { useState } from "react";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { app } from "../firebaseConfig";
-import { useNavigate, useLocation } from "react-router-dom";
+// src/components/Register.jsx
+import React, { useState, useEffect } from 'react';
+import { db } from '../firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const db = getFirestore(app);
-
-export default function Register() {
+const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const cedulaInicial = new URLSearchParams(location.search).get("cedula") || "";
 
-  const [cedula, setCedula] = useState(cedulaInicial);
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  // Recupera la cédula enviada desde Login.jsx si existe
+  const cedulaDesdeLogin = location.state?.cedula || '';
 
-  const registrar = async () => {
-    setError("");
-    if (!cedula || !nombre || !apellido || !email) {
-      setError("Todos los campos son obligatorios");
+  const [cedula, setCedula] = useState(cedulaDesdeLogin);
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (cedulaDesdeLogin) {
+      setCedula(cedulaDesdeLogin);
+    }
+  }, [cedulaDesdeLogin]);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!cedula || !nombre || !apellido || !correo) {
+      setError('Por favor, complete todos los campos.');
       return;
     }
 
     try {
       await addDoc(collection(db, "personal"), {
         cedula,
-        nombre: `${nombre} ${apellido}`,
-        email,
-        rol: "Auxiliar"
+        nombre,
+        apellido,
+        email: correo,
+        rol: "Auxiliar" // Rol por defecto
       });
-      alert("Registro exitoso. Ahora puedes ingresar.");
-      navigate("/");
+
+      alert('Registro exitoso');
+      navigate('/'); // Regresa al login
     } catch (err) {
-      console.error("Error al registrar:", err);
-      setError("Error al registrar");
+      console.error("Error al registrar: ", err);
+      setError('Hubo un problema al registrar, intente de nuevo.');
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center" }}>
-      <h1>Registro de Personal</h1>
-      <input type="text" placeholder="Cédula" value={cedula} onChange={(e) => setCedula(e.target.value)} style={inputStyle} />
-      <input type="text" placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} style={inputStyle} />
-      <input type="text" placeholder="Apellido" value={apellido} onChange={(e) => setApellido(e.target.value)} style={inputStyle} />
-      <input type="email" placeholder="Correo" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
-      <button onClick={registrar} style={buttonStyle}>Registrar</button>
-      {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
+    <div className="container">
+      <h2>Registro de Personal</h2>
+      <form onSubmit={handleRegister}>
+        <div>
+          <label>Cédula:</label>
+          <input
+            type="text"
+            value={cedula}
+            onChange={(e) => setCedula(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Nombre:</label>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Apellido:</label>
+          <input
+            type="text"
+            value={apellido}
+            onChange={(e) => setApellido(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label>Correo:</label>
+          <input
+            type="email"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            required
+          />
+        </div>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        <button type="submit">Registrar</button>
+      </form>
     </div>
   );
-}
+};
 
-const inputStyle = { width: "100%", padding: "10px", fontSize: "16px", marginBottom: "10px" };
-const buttonStyle = { width: "100%", padding: "10px", fontSize: "16px", backgroundColor: "green", color: "white", border: "none" };
+export default Register;
