@@ -1,54 +1,57 @@
 import React, { useState } from "react";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import { app } from "../firebaseConfig";
-import { useNavigate } from "react-router-dom";
+import { db } from "../firebaseConfig";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
-const db = getFirestore(app);
-
-export default function Login() {
+const Login = ({ onLoginSuccess }) => {
   const [cedula, setCedula] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [mensaje, setMensaje] = useState("");
 
-  const ingresar = async () => {
-    setError("");
-    if (!cedula) {
-      setError("Por favor ingrese su cédula");
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setMensaje("");
+
+    if (!cedula.trim()) {
+      setMensaje("Por favor ingresa tu cédula.");
       return;
     }
 
     try {
+      // Buscar en colección "personal" por cédula
       const q = query(collection(db, "personal"), where("cedula", "==", cedula));
       const querySnapshot = await getDocs(q);
 
-      if (querySnapshot.empty) {
-        // Si no está registrado → mandar a Register.jsx
-        navigate(`/register?cedula=${cedula}`);
+      if (!querySnapshot.empty) {
+        // Usuario encontrado
+        const userData = querySnapshot.docs[0].data();
+        onLoginSuccess(userData);
       } else {
-        // Si existe → entrar a la app
-        navigate("/dashboard");
+        // Usuario no encontrado → ir al registro
+        setMensaje("Usuario no encontrado. Redirigiendo a registro...");
+        setTimeout(() => {
+          window.location.href = "/register?cedula=" + cedula;
+        }, 1500);
       }
-    } catch (err) {
-      console.error("Error al ingresar:", err);
-      setError("Error al iniciar sesión");
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      setMensaje("Ocurrió un error al iniciar sesión.");
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center" }}>
-      <h1>Login</h1>
-      <input
-        type="text"
-        placeholder="Cédula"
-        value={cedula}
-        onChange={(e) => setCedula(e.target.value)}
-        style={inputStyle}
-      />
-      <button onClick={ingresar} style={buttonStyle}>Ingresar</button>
-      {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
+    <div className="container">
+      <h2>Ingreso de Personal</h2>
+      <form onSubmit={handleLogin}>
+        <label>Cédula:</label>
+        <input
+          type="text"
+          value={cedula}
+          onChange={(e) => setCedula(e.target.value)}
+        />
+        <button type="submit">Ingresar</button>
+      </form>
+      {mensaje && <p>{mensaje}</p>}
     </div>
   );
-}
+};
 
-const inputStyle = { width: "100%", padding: "10px", fontSize: "16px", marginBottom: "10px" };
-const buttonStyle = { width: "100%", padding: "10px", fontSize: "16px", backgroundColor: "blue", color: "white", border: "none" };
+export default Login;
