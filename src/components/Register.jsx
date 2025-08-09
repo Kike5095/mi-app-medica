@@ -1,45 +1,55 @@
-import React, { useState } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, addDoc } from 'firebase/firestore';
+import React, { useState } from "react";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { app } from "../firebaseConfig";
+import { useNavigate, useLocation } from "react-router-dom";
 
-const Register = ({ cedula, onLoginSuccess }) => {
-  const [nombre, setNombre] = useState('');
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+const db = getFirestore(app);
 
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const newUserProfile = {
-        nombre: nombre,
-        email: email,
-        cedula: cedula,
-        rol: "Auxiliar", // Rol por defecto
-      };
-      await addDoc(collection(db, "personal"), newUserProfile);
-      onLoginSuccess(newUserProfile);
-    } catch (err) {
-      alert("Error al registrar: " + err.message);
+export default function Register() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const cedulaInicial = new URLSearchParams(location.search).get("cedula") || "";
+
+  const [cedula, setCedula] = useState(cedulaInicial);
+  const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  const registrar = async () => {
+    setError("");
+    if (!cedula || !nombre || !apellido || !email) {
+      setError("Todos los campos son obligatorios");
+      return;
     }
-    setIsLoading(false);
+
+    try {
+      await addDoc(collection(db, "personal"), {
+        cedula,
+        nombre: `${nombre} ${apellido}`,
+        email,
+        rol: "Auxiliar"
+      });
+      alert("Registro exitoso. Ahora puedes ingresar.");
+      navigate("/");
+    } catch (err) {
+      console.error("Error al registrar:", err);
+      setError("Error al registrar");
+    }
   };
 
   return (
-    <main className="container" style={{ maxWidth: '450px', marginTop: '5rem' }}>
-      <article>
-        <hgroup>
-          <h1>Registro de Nuevo Usuario</h1>
-          <h2>La cédula **{cedula}** no está registrada. Por favor, completa tu perfil.</h2>
-        </hgroup>
-        <form onSubmit={handleRegisterSubmit}>
-          <label>Nombre Completo<input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required /></label>
-          <label>Correo Electrónico<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-          <button type="submit" aria-busy={isLoading}>{isLoading ? 'Registrando...' : 'Registrar y Entrar'}</button>
-        </form>
-      </article>
-    </main>
+    <div style={{ maxWidth: "400px", margin: "auto", textAlign: "center" }}>
+      <h1>Registro de Personal</h1>
+      <input type="text" placeholder="Cédula" value={cedula} onChange={(e) => setCedula(e.target.value)} style={inputStyle} />
+      <input type="text" placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} style={inputStyle} />
+      <input type="text" placeholder="Apellido" value={apellido} onChange={(e) => setApellido(e.target.value)} style={inputStyle} />
+      <input type="email" placeholder="Correo" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+      <button onClick={registrar} style={buttonStyle}>Registrar</button>
+      {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
+    </div>
   );
-};
+}
 
-export default Register;
+const inputStyle = { width: "100%", padding: "10px", fontSize: "16px", marginBottom: "10px" };
+const buttonStyle = { width: "100%", padding: "10px", fontSize: "16px", backgroundColor: "green", color: "white", border: "none" };
