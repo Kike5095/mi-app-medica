@@ -20,7 +20,7 @@ const PatientForm = () => {
                 // Ya no guardamos el email de la auxiliar aquí
                 treatmentEndDate: new Date(endDate),
                 createdAt: new Date(),
-                status: 'Activo'
+                status: 'Pendiente'
             });
             alert("¡Paciente guardado con éxito!");
             setPatientName('');
