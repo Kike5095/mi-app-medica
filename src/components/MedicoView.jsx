@@ -2,7 +2,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { db, auth } from "../firebaseConfig";
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 export default function MedicoView() {
   const nav = useNavigate();
@@ -16,44 +22,34 @@ export default function MedicoView() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
-  const cargarPacientes = async () => {
-    setCargando(true);
-    setError("");
-    try {
-      const col = collection(db, "patients");
+  useEffect(() => {
+    const col = collection(db, "patients");
+    const unsub = onSnapshot(
+      col,
+      (snap) => {
+        const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const act = rows.filter(
+          (p) => (p.status || "").toLowerCase() === "activo"
+        );
+        const fin = rows.filter(
+          (p) => (p.status || "").toLowerCase() === "finalizado"
+        );
 
-      // activos
-      let qActivos;
-      try { qActivos = query(col, where("estado", "==", "activo")); }
-      catch { qActivos = col; }
-      const snapA = await getDocs(qActivos);
-      const A = snapA.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => (p.estado || "").toLowerCase() === "activo");
+        const byDate = (a, b, field) =>
+          (b[field]?.seconds || b[field] || 0) - (a[field]?.seconds || a[field] || 0);
 
-      // finalizados
-      let qFin;
-      try { qFin = query(col, where("estado", "==", "finalizado")); }
-      catch { qFin = col; }
-      const snapF = await getDocs(qFin);
-      const F = snapF.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => (p.estado || "").toLowerCase() === "finalizado");
-
-      const byDate = (a, b) =>
-        (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
-
-      setActivos([...A].sort(byDate));
-      setFinalizados([...F].sort(byDate));
-    } catch (e) {
-      console.error(e);
-      setError("No pude cargar los pacientes.");
-    } finally {
-      setCargando(false);
-    }
-  };
-
-  useEffect(() => { cargarPacientes(); }, []);
+        setActivos([...act].sort((a, b) => byDate(a, b, "fechaIngreso")));
+        setFinalizados([...fin].sort((a, b) => byDate(a, b, "fechaFin")));
+        setCargando(false);
+      },
+      (e) => {
+        console.error(e);
+        setError("No pude cargar los pacientes.");
+        setCargando(false);
+      }
+    );
+    return () => unsub();
+  }, []);
 
   const logout = async () => {
     try {
@@ -63,20 +59,24 @@ export default function MedicoView() {
     nav("/");
   };
 
-  const crearPacienteDemo = async () => {
+  function formatDate(ts) {
+    if (!ts) return "-";
+    const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+    if (isNaN(d.getTime())) return "-";
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  const finalizar = async (p) => {
     try {
-      await addDoc(collection(db, "patients"), {
-        nombre: "Paciente",
-        apellido: "Demo",
-        cedula: String(Math.floor(Math.random() * 100000000)).padStart(8, "0"),
-        estado: "activo",
-        createdAt: { seconds: Math.floor(Date.now() / 1000) },
+      await updateDoc(doc(db, "patients", p.id), {
+        status: "finalizado",
+        fechaFin: serverTimestamp(),
       });
-      await cargarPacientes();
-      alert("Paciente demo creado ✅");
     } catch (e) {
       console.error(e);
-      alert("No pude crear el demo :(");
     }
   };
 
@@ -94,13 +94,6 @@ export default function MedicoView() {
         {user?.email && <p style={{ margin: 0 }}><b>Email:</b> {user.email}</p>}
       </section>
 
-      <div style={{ marginBottom: 12 }}>
-        <button onClick={crearPacienteDemo}>Crear paciente demo</button>
-        <button onClick={cargarPacientes} style={{ marginLeft: 8 }}>
-          Recargar lista
-        </button>
-      </div>
-
       {cargando && <p>Cargando pacientes…</p>}
       {error && <p style={{ color: "crimson" }}>{error}</p>}
 
@@ -110,14 +103,23 @@ export default function MedicoView() {
           <p style={{ color: "#666" }}>No hay pacientes activos.</p>
         ) : (
           <ul>
-            {activos.map(p => (
+            {activos.map((p) => (
               <li key={p.id} style={{ marginBottom: 6 }}>
-                <b>{p.nombre} {p.apellido}</b> — Cédula: {p.cedula}
+                <b>
+                  {(p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim()}
+                </b>
+                {" "}— Cédula: {p.cedula || "-"} — Ingreso: {formatDate(p.fechaIngreso)}
                 <button
                   onClick={() => nav(`/paciente/${p.id}`)}
                   style={{ marginLeft: 8 }}
                 >
                   Ver
+                </button>
+                <button
+                  onClick={() => finalizar(p)}
+                  style={{ marginLeft: 8 }}
+                >
+                  Finalizar
                 </button>
               </li>
             ))}
@@ -131,9 +133,12 @@ export default function MedicoView() {
           <p style={{ color: "#666" }}>No hay pacientes finalizados.</p>
         ) : (
           <ul>
-            {finalizados.map(p => (
+            {finalizados.map((p) => (
               <li key={p.id} style={{ marginBottom: 6 }}>
-                <b>{p.nombre} {p.apellido}</b> — Cédula: {p.cedula}
+                <b>
+                  {(p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim()}
+                </b>
+                {" "}— Cédula: {p.cedula || "-"} — Fin: {formatDate(p.fechaFin)}
                 <button
                   onClick={() => nav(`/paciente/${p.id}`)}
                   style={{ marginLeft: 8 }}
