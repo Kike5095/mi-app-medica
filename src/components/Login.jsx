@@ -1,101 +1,49 @@
-// src/components/SuperNav.jsx
-import { useNavigate, useLocation } from "react-router-dom";
+// src/components/Login.jsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [cedula, setCedula] = useState("");
-  const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    const ced = String(cedula).trim();
-    if (!ced) return;
-
-    setCargando(true);
+  const handleSelect = (role, path) => {
     try {
-      // 1) Autenticación (anónima o la que uses)
-      await ensureAuth();
-
-      // 2) Buscar en Firestore por CAMPO "cedula" (IDs en personal son automáticos)
-      const q = query(collection(db, "personal"), where("cedula", "==", ced));
-      const snap = await getDocs(q);
-
-      if (snap.empty) {
-        // No está registrado → ir a registro con la cédula pre-llenada
-        navigate(`/registrar?cedula=${encodeURIComponent(ced)}`);
-        return;
-      }
-
-      const data = snap.docs[0].data();
-
-      // 3) Guardar sesión local
-      localStorage.setItem("user", JSON.stringify(data));
-
-      // 4) Redirigir por rol
-      const rol = (data.rol || "").toLowerCase();
-      if (rol.includes("medico") || rol.includes("médico")) {
-        navigate("/medico", { state: { user: data } });
-      } else if (rol.includes("admin") || rol.includes("administrador")) {
-        navigate("/admin", { state: { user: data } });
-      } else {
-        // Por defecto, Auxiliar
-        navigate("/auxiliar", { state: { user: data } });
-      }
-    } catch (err) {
-      console.error("Error al iniciar sesión:", err);
-      setError("Ocurrió un error al iniciar sesión.");
+      setLoading(true);
+      localStorage.setItem("role", role);
+      navigate(path);
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 420, marginTop: 16 }}>
-      <h1>Ingreso de Personal</h1>
+    <div style={{ maxWidth: 420, margin: "40px auto", padding: 16 }}>
+      <h1 style={{ marginBottom: 12 }}>Ingresar</h1>
+      <p style={{ marginBottom: 24 }}>
+        Selecciona tu rol para continuar.
+      </p>
 
-      <label style={{ display: "block", margin: "8px 0 4px" }}>Cédula:</label>
-      <input
-        type="text"
-        value={cedula}
-        onChange={(e) => setCedula(e.target.value)}
-        placeholder="Ingrese su cédula"
-        style={{ width: "100%", padding: 10, fontSize: 16 }}
-      />
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <button
+          type="button"
+          onClick={() => handleSelect("medico", "/medico")}
+          disabled={loading}
+          className="btn primary"
+          style={{ padding: "10px 14px", cursor: "pointer" }}
+        >
+          Médico
+        </button>
 
-      <button
-        type="submit"
-        disabled={cargando || !cedula.trim()}
-        style={{
-          marginTop: 12,
-          width: "100%",
-          padding: 12,
-          fontSize: 16,
-          background: "#0b6aa2",
-          color: "white",
-          border: "none",
-          borderRadius: 6,
-          cursor: cargando ? "not-allowed" : "pointer",
-        }}
-      >
-        {cargando ? "Verificando..." : "Ingresar"}
-      </button>
-
-  return (
-    <div style={{
-      position: "sticky",
-      top: 0,
-      zIndex: 10,
-      background: "#fff",
-      borderBottom: "1px solid #eee",
-      padding: "10px 12px",
-      marginBottom: 8
-    }}>
-      <b>Super Admin:</b>{" "}
-      <Btn to="/admin">Admin</Btn>
-      <Btn to="/medico">Médico</Btn>
-      <Btn to="/auxiliar">Auxiliar</Btn>
+        <button
+          type="button"
+          onClick={() => handleSelect("auxiliar", "/auxiliar")}
+          disabled={loading}
+          className="btn"
+          style={{ padding: "10px 14px", cursor: "pointer" }}
+        >
+          Auxiliar
+        </button>
+      </div>
     </div>
   );
 }
