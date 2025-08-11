@@ -109,7 +109,7 @@ export default function AdminView() {
           <li key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid #eee", borderRadius: 8, padding: 12 }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <strong>
-                {p.firstName} {p.lastName}
+                {(p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim()}
               </strong>
               <span>Cédula: {p.cedula || "-"}</span>
               <span>

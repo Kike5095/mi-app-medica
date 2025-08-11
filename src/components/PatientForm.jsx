@@ -7,15 +7,14 @@ import {
   query,
   where,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 
 export default function PatientForm({ onClose, onCreated }) {
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    nombreCompleto: "",
     cedula: "",
-    telefono: "",
-    direccion: "",
+    fechaFin: "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -28,8 +27,14 @@ export default function PatientForm({ onClose, onCreated }) {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.cedula.trim()) {
-      setError("Nombre, apellido y cédula son obligatorios");
+    if (
+      !form.nombreCompleto.trim() ||
+      !form.cedula.trim() ||
+      !form.fechaFin
+    ) {
+      setError(
+        "Nombre completo, cédula y fecha de finalización son obligatorios"
+      );
       return;
     }
     setSaving(true);
@@ -40,17 +45,16 @@ export default function PatientForm({ onClose, onCreated }) {
       );
       const snap = await getDocs(q);
       if (!snap.empty) {
-        setError("Ya existe un paciente con esa cédula");
+        setError("La cédula ya está registrada");
         setSaving(false);
         return;
       }
       await addDoc(collection(db, "patients"), {
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
+        nombreCompleto: form.nombreCompleto.trim(),
         cedula: String(form.cedula).trim(),
-        telefono: form.telefono.trim(),
-        direccion: form.direccion.trim(),
         status: "pendiente",
+        fechaIngreso: serverTimestamp(),
+        fechaFin: Timestamp.fromDate(new Date(form.fechaFin)),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -86,21 +90,10 @@ export default function PatientForm({ onClose, onCreated }) {
         <h2>Nuevo paciente</h2>
 
         <label style={{ display: "block", marginBottom: 8 }}>
-          Nombre
+          Nombre completo
           <input
-            name="firstName"
-            value={form.firstName}
-            onChange={change}
-            required
-            style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}
-          />
-        </label>
-
-        <label style={{ display: "block", marginBottom: 8 }}>
-          Apellido
-          <input
-            name="lastName"
-            value={form.lastName}
+            name="nombreCompleto"
+            value={form.nombreCompleto}
             onChange={change}
             required
             style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}
@@ -119,21 +112,13 @@ export default function PatientForm({ onClose, onCreated }) {
         </label>
 
         <label style={{ display: "block", marginBottom: 8 }}>
-          Teléfono
+          Fecha de finalización
           <input
-            name="telefono"
-            value={form.telefono}
+            type="date"
+            name="fechaFin"
+            value={form.fechaFin}
             onChange={change}
-            style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}
-          />
-        </label>
-
-        <label style={{ display: "block", marginBottom: 8 }}>
-          Dirección
-          <input
-            name="direccion"
-            value={form.direccion}
-            onChange={change}
+            required
             style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}
           />
         </label>
