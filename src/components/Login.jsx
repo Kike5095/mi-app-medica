@@ -43,6 +43,19 @@ export default function Login() {
         >
           Auxiliar
         </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            localStorage.setItem("role", "admin");
+            navigate("/admin");
+          }}
+          disabled={loading}
+          className="btn"
+          style={{ padding: "10px 14px", cursor: "pointer" }}
+        >
+          Admin
+        </button>
       </div>
     </div>
   );
