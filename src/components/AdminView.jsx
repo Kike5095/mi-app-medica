@@ -30,14 +30,6 @@ function formatDate(value) {
 export default function AdminView() {
   const nav = useNavigate();
 
-<<<<<<< Updated upstream
-  if (!user) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h2>Panel del Administrador</h2>
-        <p>No hay datos de usuario. Vuelve al <Link to="/">inicio de sesión</Link>.</p>
-      </div>
-=======
   // Formulario
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -59,7 +51,6 @@ export default function AdminView() {
         setLoading(false);
       },
       () => setLoading(false)
->>>>>>> Stashed changes
     );
     return () => unsub();
   }, []);
@@ -98,26 +89,6 @@ export default function AdminView() {
     setFin("");
   }
 
-<<<<<<< Updated upstream
-  return (
-    <div style={{ padding: 24 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Panel del Administrador</h2>
-        <LogoutButton />
-      </header>
-
-      <section style={{ marginTop: 12 }}>
-        <p><strong>Nombre:</strong> {user.nombre}</p>
-        <p><strong>Cédula:</strong> {user.cedula}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Rol:</strong> {user.rol}</p>
-      </section>
-
-      {/* TODO: Sprint 1
-          - Form para crear paciente (nombre, apellido, cédula, estado=pending)
-          - Lista por estado (pendiente/activo/finalizado) con acciones Activar/Finalizar
-      */}
-=======
   async function activarPaciente(p) {
     await updateDoc(doc(db, "patients", p.idDoc), { status: "Activo" });
   }
@@ -360,7 +331,6 @@ export default function AdminView() {
         .actions { display: flex; gap: 8px; }
         .muted { color: #6c757d; }
       `}</style>
->>>>>>> Stashed changes
     </div>
   );
 }

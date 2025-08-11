@@ -1,21 +1,4 @@
 // src/components/AuxiliarView.jsx
-<<<<<<< Updated upstream
-import { useLocation, Link } from "react-router-dom";
-import LogoutButton from "./LogoutButton";
-
-export default function AuxiliarView() {
-  const { state } = useLocation();
-  const user = state?.user || JSON.parse(localStorage.getItem("user") || "null");
-
-  if (!user) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h2>Panel del Auxiliar</h2>
-        <p>No hay datos de usuario. Vuelve al <Link to="/">inicio de sesión</Link>.</p>
-      </div>
-    );
-  }
-=======
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -103,7 +86,6 @@ export default function AuxiliarView() {
       setInfo("No se pudo registrar. Revisa la conexión / permisos.");
     }
   };
->>>>>>> Stashed changes
 
   return (
     <div style={{ maxWidth: 1100, margin: "20px auto", padding: "0 12px" }}>
@@ -112,20 +94,6 @@ export default function AuxiliarView() {
         <button onClick={() => nav("/")} >Salir</button>
       </header>
 
-<<<<<<< Updated upstream
-      <section style={{ marginTop: 12 }}>
-        <p><strong>Nombre:</strong> {user.nombre}</p>
-        <p><strong>Cédula:</strong> {user.cedula}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Rol:</strong> {user.rol}</p>
-      </section>
-
-      {/* TODO: Sprint 1
-          - Buscar paciente por cédula
-          - Form de signos vitales (fc, fr, tensión sys/dia, sat, temp) + nota de enfermería
-          - Guardar en patients/{cedula}/vitals/{autoId}
-      */}
-=======
       <div className="twocol">
         {/* ========== Columna izquierda ========== */}
         <div>
@@ -188,7 +156,6 @@ export default function AuxiliarView() {
           {paciente && <VitalCharts patientId={paciente.id} />}
         </div>
       </div>
->>>>>>> Stashed changes
     </div>
   );
 }
