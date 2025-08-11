@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import PatientHistoryModal from "./PatientHistoryModal";
 
 function formatDate(ts) {
   if (!ts) return "-";
@@ -16,7 +17,7 @@ const TABS = ["pendiente", "activo", "finalizado"];
 export default function AdminView() {
   const [patients, setPatients] = useState([]);
   const [activeTab, setActiveTab] = useState("pendiente");
-  const [modalPatient, setModalPatient] = useState(null);
+  const [historyId, setHistoryId] = useState(null);
 
   useEffect(() => {
     const q = collection(db, "patients");
@@ -89,7 +90,7 @@ export default function AdminView() {
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer" }}
-                onClick={() => setModalPatient(p)}
+                onClick={() => setHistoryId(p.id)}
               >
                 Ver historial
               </button>
@@ -114,33 +115,11 @@ export default function AdminView() {
         ))}
       </ul>
 
-      {modalPatient && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ background: "#fff", padding: 20, borderRadius: 8, minWidth: 300 }}>
-            <h2>
-              Historial de {modalPatient.firstName} {modalPatient.lastName}
-            </h2>
-            <p>Contenido pendiente...</p>
-            <button
-              style={{ marginTop: 12, padding: "6px 10px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer" }}
-              onClick={() => setModalPatient(null)}
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
+      {historyId && (
+        <PatientHistoryModal
+          patientId={historyId}
+          onClose={() => setHistoryId(null)}
+        />
       )}
     </div>
   );
