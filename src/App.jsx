@@ -1,58 +1,51 @@
-// src/App.jsx
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+
 import Login from "./components/Login.jsx";
 import Register from "./components/Register.jsx";
-import AdminView from "./components/AdminView.jsx";
 import MedicoView from "./components/MedicoView.jsx";
 import AuxiliarView from "./components/AuxiliarView.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import RoleRoute from "./components/RoleRoute.jsx";
+import AdminView from "./components/AdminView.jsx";
+import PatientDetail from "./components/PatientDetail.jsx";
+import SuperNav from "./components/SuperNav.jsx";
 
 export default function App() {
+  // Lee el rol desde localStorage pero en estado, para que re-renderice
+  const [role, setRole] = useState(() => localStorage.getItem("role") || "");
+  const isSuperAdmin = role === "superadmin";
+  const location = useLocation();
+
+  // Si otro código cambia el role en localStorage, nos enteramos
+  useEffect(() => {
+    const onStorage = () => setRole(localStorage.getItem("role") || "");
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Por si el login lo cambia en esta misma pestaña
+  useEffect(() => {
+    const r = localStorage.getItem("role") || "";
+    if (r !== role) setRole(r);
+  }, [location.pathname]); // cuando cambias de ruta, re-sync
+
   return (
-    <Routes>
-      {/* Público */}
-      <Route path="/" element={<Login />} />
-      <Route path="/registrar" element={<Register />} />
+    <>
+      {isSuperAdmin && <SuperNav />}
 
-      {/* Admin */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute>
-            <RoleRoute allow={["admin", "administrador"]}>
-              <AdminView />
-            </RoleRoute>
-          </ProtectedRoute>
-        }
-      />
+      <Routes>
+        {/* públicas */}
+        <Route path="/" element={<Login />} />
+        <Route path="/registrar" element={<Register />} />
 
-      {/* Médico */}
-      <Route
-        path="/medico"
-        element={
-          <ProtectedRoute>
-            <RoleRoute allow={["medico", "médico"]}>
-              <MedicoView />
-            </RoleRoute>
-          </ProtectedRoute>
-        }
-      />
+        {/* dejamos rutas SIEMPRE disponibles (más simple p/ superadmin) */}
+        <Route path="/medico" element={<MedicoView />} />
+        <Route path="/paciente/:id" element={<PatientDetail />} />
+        <Route path="/auxiliar" element={<AuxiliarView />} />
+        <Route path="/admin" element={<AdminView />} />
 
-      {/* Auxiliar */}
-      <Route
-        path="/auxiliar"
-        element{
-          <ProtectedRoute>
-            <RoleRoute allow={["auxiliar"]}>
-              <AuxiliarView />
-            </RoleRoute>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }

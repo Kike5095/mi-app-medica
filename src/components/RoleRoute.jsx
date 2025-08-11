@@ -1,5 +1,4 @@
 import { Navigate } from "react-router-dom";
-
 export default function RoleRoute({ children, allow }) {
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const rol = (user?.rol || "").toLowerCase();

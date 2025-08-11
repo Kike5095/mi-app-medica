@@ -1,8 +1,5 @@
-// src/components/Login.jsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ensureAuth, db } from "../firebaseConfig";
-import { collection, query, where, getDocs } from "firebase/firestore";
+// src/components/SuperNav.jsx
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Login() {
   const [cedula, setCedula] = useState("");
@@ -85,7 +82,20 @@ export default function Login() {
         {cargando ? "Verificando..." : "Ingresar"}
       </button>
 
-      {error && <p style={{ color: "crimson", marginTop: 12 }}>{error}</p>}
-    </form>
+  return (
+    <div style={{
+      position: "sticky",
+      top: 0,
+      zIndex: 10,
+      background: "#fff",
+      borderBottom: "1px solid #eee",
+      padding: "10px 12px",
+      marginBottom: 8
+    }}>
+      <b>Super Admin:</b>{" "}
+      <Btn to="/admin">Admin</Btn>
+      <Btn to="/medico">Médico</Btn>
+      <Btn to="/auxiliar">Auxiliar</Btn>
+    </div>
   );
 }

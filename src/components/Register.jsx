@@ -1,101 +1,93 @@
 // src/components/Register.jsx
-import React, { useState, useEffect } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, addDoc } from 'firebase/firestore';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { db, ensureAuth } from "../firebaseConfig";
+import { addDoc, collection } from "firebase/firestore";
 
-const Register = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Recupera la cédula enviada desde Login.jsx si existe
-  const cedulaDesdeLogin = location.state?.cedula || '';
-
-  const [cedula, setCedula] = useState(cedulaDesdeLogin);
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [error, setError] = useState('');
+export default function Register() {
+  const [params] = useSearchParams();
+  const [form, setForm] = useState({
+    nombre: "",
+    apellido: "",
+    email: "",
+    cedula: params.get("cedula") || "",
+  });
+  const [guardando, setGuardando] = useState(false);
+  const nav = useNavigate();
 
   useEffect(() => {
-    if (cedulaDesdeLogin) {
-      setCedula(cedulaDesdeLogin);
-    }
-  }, [cedulaDesdeLogin]);
+    ensureAuth().catch(console.error);
+  }, []);
 
-  const handleRegister = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setError('');
+    if (!form.cedula.trim() || !form.nombre.trim() || !form.apellido.trim()) return;
 
-    if (!cedula || !nombre || !apellido || !correo) {
-      setError('Por favor, complete todos los campos.');
-      return;
-    }
-
+    setGuardando(true);
     try {
       await addDoc(collection(db, "personal"), {
-        cedula,
-        nombre,
-        apellido,
-        email: correo,
-        rol: "Auxiliar" // Rol por defecto
+        ...form,
+        cedula: String(form.cedula).trim(),
+        rol: "Auxiliar",
       });
 
-      alert('Registro exitoso');
-      navigate('/'); // Regresa al login
+      const user = { ...form, rol: "Auxiliar" };
+      localStorage.setItem("user", JSON.stringify(user));
+      nav("/auxiliar", { state: { user } });
     } catch (err) {
-      console.error("Error al registrar: ", err);
-      setError('Hubo un problema al registrar, intente de nuevo.');
+      console.error("Error registrando:", err);
+      alert("No se pudo registrar. Revisa la consola.");
+    } finally {
+      setGuardando(false);
     }
   };
 
   return (
-    <div className="container">
-      <h2>Registro de Personal</h2>
-      <form onSubmit={handleRegister}>
-        <div>
-          <label>Cédula:</label>
-          <input
-            type="text"
-            value={cedula}
-            onChange={(e) => setCedula(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Nombre:</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Apellido:</label>
-          <input
-            type="text"
-            value={apellido}
-            onChange={(e) => setApellido(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Correo:</label>
-          <input
-            type="email"
-            value={correo}
-            onChange={(e) => setCorreo(e.target.value)}
-            required
-          />
-        </div>
+    <form onSubmit={submit} style={{ maxWidth: 480 }}>
+      <h2>Registro de Personal (rol: Auxiliar)</h2>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+      <input
+        placeholder="Nombre"
+        value={form.nombre}
+        onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+        style={{ display: "block", margin: "8px 0", width: "100%", padding: 10 }}
+      />
+      <input
+        placeholder="Apellido"
+        value={form.apellido}
+        onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
+        style={{ display: "block", margin: "8px 0", width: "100%", padding: 10 }}
+      />
+      <input
+        placeholder="Cédula"
+        value={form.cedula}
+        onChange={(e) => setForm((f) => ({ ...f, cedula: e.target.value }))}
+        style={{ display: "block", margin: "8px 0", width: "100%", padding: 10 }}
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={form.email}
+        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+        style={{ display: "block", margin: "8px 0", width: "100%", padding: 10 }}
+      />
 
-        <button type="submit">Registrar</button>
-      </form>
-    </div>
+      <button
+        disabled={guardando}
+        style={{
+          marginTop: 12,
+          width: "100%",
+          padding: 12,
+          fontSize: 16,
+          background: "#0b6aa2",
+          color: "white",
+          border: "none",
+          borderRadius: 6,
+          cursor: guardando ? "not-allowed" : "pointer",
+        }}
+      >
+        {guardando ? "Creando..." : "Crear"}
+      </button>
+    </form>
   );
-};
-
-export default Register;
+}

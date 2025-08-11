@@ -1,3 +1,82 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ====== Base muy simple ====== */
+:root {
+  --bg: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --primary: #0d6efd;
+  --danger: #dc3545;
+  --border: #e5e7eb;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1, h2, h3 { margin: 0 0 .6rem; }
+p { margin: .4rem 0; }
+
+input, textarea, button {
+  font: inherit;
+}
+
+input, textarea {
+  width: 100%;
+  padding: .6rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: .6rem;
+  outline: none;
+}
+
+textarea { min-height: 90px; resize: vertical; }
+
+button {
+  padding: .55rem .9rem;
+  border: 1px solid var(--border);
+  border-radius: .6rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+button.danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+/* ====== Layout dos columnas (izquierda contenido / derecha charts) ====== */
+.twocol {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1000px) {
+  .twocol {
+    grid-template-columns: 1fr 420px; /* derecha más angosta */
+  }
+}
+
+/* Para fijar las gráficas en desktop cuando hay scroll */
+.charts-wrap {
+  position: sticky;
+  top: 12px;
+}
+
+/* Tarjeta para cada gráfico */
+.chart-card {
+  height: 220px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 12px;
+}
