@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  serverTimestamp,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import PatientHistoryModal from "./PatientHistoryModal";
+import PatientForm from "./PatientForm";
 
 function formatDate(ts) {
   if (!ts) return "-";
@@ -18,6 +26,7 @@ export default function AdminView() {
   const [patients, setPatients] = useState([]);
   const [activeTab, setActiveTab] = useState("pendiente");
   const [historyId, setHistoryId] = useState(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const q = collection(db, "patients");
@@ -29,6 +38,12 @@ export default function AdminView() {
   }, []);
 
   const filtered = patients.filter((p) => (p.status || "").toLowerCase() === activeTab);
+
+  const refrescar = async () => {
+    const snap = await getDocs(collection(db, "patients"));
+    const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    setPatients(rows);
+  };
 
   const updateLocal = (id, changes) => {
     setPatients((prev) => prev.map((p) => (p.id === id ? { ...p, ...changes } : p)));
@@ -55,6 +70,20 @@ export default function AdminView() {
   return (
     <div className="admin-view" style={{ padding: 20 }}>
       <h1>Pacientes</h1>
+      <button
+        onClick={() => setCreating(true)}
+        style={{
+          padding: "8px 12px",
+          borderRadius: 6,
+          border: "1px solid #0d6efd",
+          background: "#0d6efd",
+          color: "#fff",
+          cursor: "pointer",
+          marginBottom: 16,
+        }}
+      >
+        Crear paciente
+      </button>
       <div className="tabs" style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {TABS.map((t) => (
           <button
@@ -119,6 +148,12 @@ export default function AdminView() {
         <PatientHistoryModal
           patientId={historyId}
           onClose={() => setHistoryId(null)}
+        />
+      )}
+      {creating && (
+        <PatientForm
+          onCreated={refrescar}
+          onClose={() => setCreating(false)}
         />
       )}
     </div>
