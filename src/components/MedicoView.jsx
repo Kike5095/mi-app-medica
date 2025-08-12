@@ -106,9 +106,13 @@ export default function MedicoView() {
             {activos.map((p) => (
               <li key={p.id} style={{ marginBottom: 6 }}>
                 <b>
-                  {(p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim()}
+                  {(
+                    p.nombreCompleto ||
+                    `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
+                    "—"
+                  )}
                 </b>
-                {" "}— Cédula: {p.cedula || "-"} — Ingreso: {formatDate(p.fechaIngreso)}
+                {" "}— Cédula: {p.cedula || "—"} — Ingreso: {formatDate(p.fechaIngreso)}
                 <button
                   onClick={() => nav(`/paciente/${p.id}`)}
                   style={{ marginLeft: 8 }}
@@ -136,9 +140,13 @@ export default function MedicoView() {
             {finalizados.map((p) => (
               <li key={p.id} style={{ marginBottom: 6 }}>
                 <b>
-                  {(p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim()}
+                  {(
+                    p.nombreCompleto ||
+                    `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
+                    "—"
+                  )}
                 </b>
-                {" "}— Cédula: {p.cedula || "-"} — Fin: {formatDate(p.fechaFin)}
+                {" "}— Cédula: {p.cedula || "—"} — Fin: {formatDate(p.fechaFin)}
                 <button
                   onClick={() => nav(`/paciente/${p.id}`)}
                   style={{ marginLeft: 8 }}
