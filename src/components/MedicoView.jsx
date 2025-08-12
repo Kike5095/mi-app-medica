@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import LogoutButton from "./LogoutButton";
 import { asDate, ingresoDisplay, finDisplay } from "../utils/dates";
+import { isAdmin as _isAdmin, assertAdmin as _assertAdmin } from "../utils/roles";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";

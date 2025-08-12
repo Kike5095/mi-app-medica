@@ -16,6 +16,7 @@ import VitalCharts from "./VitalCharts";
 import LogoutButton from "./LogoutButton";
 import { parseBP } from "../utils/bp";
 import { finDisplay } from "../utils/dates";
+import { isAdmin as _isAdmin, assertAdmin as _assertAdmin } from "../utils/roles";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";
