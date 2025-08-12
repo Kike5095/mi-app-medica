@@ -11,16 +11,6 @@ import {
 } from "firebase/firestore";
 import LogoutButton from "./LogoutButton";
 import { asDate, ingresoDisplay, finDisplay } from "../utils/dates";
-import { isAdmin as _isAdmin, assertAdmin as _assertAdmin } from "../utils/roles";
-
-function showVal(v) {
-  return v || v === 0 ? String(v) : "—";
-}
-
-function truncate(t, n = 40) {
-  if (!t) return "—";
-  return t.length > n ? t.slice(0, n) + "…" : t;
-}
 
 export default function MedicoView() {
   const nav = useNavigate();
@@ -81,7 +71,7 @@ export default function MedicoView() {
     <div className="page">
       <div className="container">
         <div className="section-header">
-          <h1 className="section-title">Panel Médico</h1>
+          <h1 className="section-title">Pacientes</h1>
           <LogoutButton />
         </div>
 
@@ -101,96 +91,136 @@ export default function MedicoView() {
         {cargando && <p>Cargando pacientes…</p>}
         {error && <p className="error">{error}</p>}
 
-        <section>
-          <h2>Pacientes activos</h2>
-          {activos.length === 0 ? (
-            <p>No hay pacientes activos.</p>
-          ) : (
-            <ul>
-              {activos.map((p) => {
-                const ingreso = ingresoDisplay(p);
-                const fin = finDisplay(p);
-                return (
-                  <li key={p.id} className="card">
-                    <div className="card-body">
-                      <div>
-                        <b>
-                          {
-                            p.nombreCompleto ||
-                            `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
-                            "—"
-                          }
-                        </b>
-                        <div className="muted">
-                          Cédula: {p.cedula || "—"} · Edad: {showVal(p.edad)} · Dx: {truncate(p.diagnostico, 40)}
-                        </div>
-                        <div className="muted">
-                          Ingreso: {ingreso} · Fin: {fin}
-                        </div>
-                      </div>
-                      <div>
-                        <button
-                          className="btn"
-                          onClick={() => nav(`/paciente/${p.id}`)}
-                        >
-                          Ver
-                        </button>
-                        <button
-                          className="btn danger"
-                          onClick={() => finalizar(p)}
-                        >
-                          Finalizar
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+        <section className="card">
+          <div className="card-body">
+            <h2>Activos</h2>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Cédula</th>
+                    <th>Edad</th>
+                    <th>Diagnóstico</th>
+                    <th>Ingreso</th>
+                    <th>Fin</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activos.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>No hay pacientes</td>
+                    </tr>
+                  ) : (
+                    activos.map((p) => {
+                      const nombre =
+                        p.nombreCompleto ||
+                        `${p.firstName || ""} ${p.lastName || ""}` ||
+                        "—";
+                      const ced = p.cedula || "—";
+                      const edadTxt =
+                        p.edad || p.edad === 0 ? String(p.edad) : "—";
+                      const dxTxt = p.diagnostico
+                        ? p.diagnostico.length > 30
+                          ? p.diagnostico.slice(0, 30) + "…"
+                          : p.diagnostico
+                        : "—";
+                      return (
+                        <tr key={p.id}>
+                          <td>{nombre}</td>
+                          <td>{ced}</td>
+                          <td>{edadTxt}</td>
+                          <td title={p.diagnostico || ""}>{dxTxt}</td>
+                          <td>{ingresoDisplay(p)}</td>
+                          <td>{finDisplay(p)}</td>
+                          <td>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button
+                                className="btn"
+                                onClick={() => nav(`/paciente/${p.id}`)}
+                              >
+                                Ver
+                              </button>
+                              <button
+                                className="btn danger"
+                                onClick={() => finalizar(p)}
+                              >
+                                Finalizar
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
-        <section>
-          <h2>Pacientes finalizados</h2>
-          {finalizados.length === 0 ? (
-            <p>No hay pacientes finalizados.</p>
-          ) : (
-            <ul>
-              {finalizados.map((p) => {
-                const ingreso = ingresoDisplay(p);
-                const fin = finDisplay(p);
-                return (
-                  <li key={p.id} className="card">
-                    <div className="card-body">
-                      <div>
-                        <b>
-                          {
-                            p.nombreCompleto ||
-                            `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
-                            "—"
-                          }
-                        </b>
-                        <div className="muted">
-                          Cédula: {p.cedula || "—"} · Edad: {showVal(p.edad)} · Dx: {truncate(p.diagnostico, 40)}
-                        </div>
-                        <div className="muted">
-                          Ingreso: {ingreso} · Fin: {fin}
-                        </div>
-                      </div>
-                      <div>
-                        <button
-                          className="btn"
-                          onClick={() => nav(`/paciente/${p.id}`)}
-                        >
-                          Ver
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+        <section className="card">
+          <div className="card-body">
+            <h2>Finalizados</h2>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Cédula</th>
+                    <th>Edad</th>
+                    <th>Diagnóstico</th>
+                    <th>Ingreso</th>
+                    <th>Fin</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {finalizados.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>No hay pacientes</td>
+                    </tr>
+                  ) : (
+                    finalizados.map((p) => {
+                      const nombre =
+                        p.nombreCompleto ||
+                        `${p.firstName || ""} ${p.lastName || ""}` ||
+                        "—";
+                      const ced = p.cedula || "—";
+                      const edadTxt =
+                        p.edad || p.edad === 0 ? String(p.edad) : "—";
+                      const dxTxt = p.diagnostico
+                        ? p.diagnostico.length > 30
+                          ? p.diagnostico.slice(0, 30) + "…"
+                          : p.diagnostico
+                        : "—";
+                      return (
+                        <tr key={p.id}>
+                          <td>{nombre}</td>
+                          <td>{ced}</td>
+                          <td>{edadTxt}</td>
+                          <td title={p.diagnostico || ""}>{dxTxt}</td>
+                          <td>{ingresoDisplay(p)}</td>
+                          <td>{finDisplay(p)}</td>
+                          <td>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button
+                                className="btn"
+                                onClick={() => nav(`/paciente/${p.id}`)}
+                              >
+                                Ver
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </section>
       </div>
     </div>
