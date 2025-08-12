@@ -10,6 +10,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import LogoutButton from "./LogoutButton";
+import { asDate, ingresoDisplay, finDisplay } from "../utils/dates";
 
 export default function MedicoView() {
   const nav = useNavigate();
@@ -52,28 +53,6 @@ export default function MedicoView() {
     return () => unsub();
   }, []);
 
-  function asDate(v) {
-    if (!v) return null;
-    if (v.seconds) return new Date(v.seconds * 1000);
-    if (v instanceof Date) return v;
-    const d = new Date(v);
-    return isNaN(d) ? null : d;
-  }
-  function fmt(v) {
-    const d = asDate(v);
-    if (!d) return "—";
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    return `${dd}/${mm}/${yyyy}`;
-  }
-
-  function finDisplay(p) {
-    return fmt(p.finAt ?? p.finEstimadoAt ?? p.fin);
-  }
-  function ingresoDisplay(p) {
-    return fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
-  }
 
   const finalizar = async (p) => {
     try {
