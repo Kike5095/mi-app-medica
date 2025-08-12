@@ -1,7 +1,7 @@
 // src/components/MedicoView.jsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { db, auth } from "../firebaseConfig";
+import { db } from "../firebaseConfig";
 import {
   collection,
   onSnapshot,
@@ -9,6 +9,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import LogoutButton from "./LogoutButton";
 
 export default function MedicoView() {
   const nav = useNavigate();
@@ -51,14 +52,6 @@ export default function MedicoView() {
     return () => unsub();
   }, []);
 
-  const logout = async () => {
-    try {
-      localStorage.removeItem("user");
-      if (auth?.signOut) await auth.signOut();
-    } catch {}
-    nav("/");
-  };
-
   function formatDate(ts) {
     if (!ts) return "-";
     const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
@@ -81,83 +74,104 @@ export default function MedicoView() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "20px auto", padding: "0 12px" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>Panel Médico</h1>
-        <div>
-          <button onClick={logout} style={{ padding: "6px 12px" }}>Salir</button>
+    <div className="page">
+      <div className="container">
+        <div className="section-header">
+          <h1 className="section-title">Panel Médico</h1>
+          <LogoutButton />
         </div>
-      </header>
 
-      <section style={{ margin: "12px 0 24px" }}>
-        {user?.nombre && <p style={{ margin: 0 }}><b>Médico:</b> {user.nombre}</p>}
-        {user?.email && <p style={{ margin: 0 }}><b>Email:</b> {user.email}</p>}
-      </section>
+        <section>
+          {user?.nombre && (
+            <p>
+              <b>Médico:</b> {user.nombre}
+            </p>
+          )}
+          {user?.email && (
+            <p>
+              <b>Email:</b> {user.email}
+            </p>
+          )}
+        </section>
 
-      {cargando && <p>Cargando pacientes…</p>}
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
+        {cargando && <p>Cargando pacientes…</p>}
+        {error && <p className="error">{error}</p>}
 
-      <section style={{ marginTop: 16 }}>
-        <h2>Pacientes activos</h2>
-        {activos.length === 0 ? (
-          <p style={{ color: "#666" }}>No hay pacientes activos.</p>
-        ) : (
-          <ul>
-            {activos.map((p) => (
-              <li key={p.id} style={{ marginBottom: 6 }}>
-                <b>
-                  {(
-                    p.nombreCompleto ||
-                    `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
-                    "—"
-                  )}
-                </b>
-                {" "}— Cédula: {p.cedula || "—"} — Ingreso: {formatDate(p.fechaIngreso)}
-                <button
-                  onClick={() => nav(`/paciente/${p.id}`)}
-                  style={{ marginLeft: 8 }}
-                >
-                  Ver
-                </button>
-                <button
-                  onClick={() => finalizar(p)}
-                  style={{ marginLeft: 8 }}
-                >
-                  Finalizar
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <section>
+          <h2>Pacientes activos</h2>
+          {activos.length === 0 ? (
+            <p>No hay pacientes activos.</p>
+          ) : (
+            <ul>
+              {activos.map((p) => (
+                <li key={p.id} className="card">
+                  <div className="card-body">
+                    <div>
+                      <b>
+                        {
+                          p.nombreCompleto ||
+                          `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
+                          "—"
+                        }
+                      </b>
+                      {" "}— Cédula: {p.cedula || "—"} — Ingreso: {formatDate(p.fechaIngreso)}
+                    </div>
+                    <div>
+                      <button
+                        className="btn"
+                        onClick={() => nav(`/paciente/${p.id}`)}
+                      >
+                        Ver
+                      </button>
+                      <button
+                        className="btn danger"
+                        onClick={() => finalizar(p)}
+                      >
+                        Finalizar
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      <section style={{ marginTop: 16 }}>
-        <h2>Pacientes finalizados</h2>
-        {finalizados.length === 0 ? (
-          <p style={{ color: "#666" }}>No hay pacientes finalizados.</p>
-        ) : (
-          <ul>
-            {finalizados.map((p) => (
-              <li key={p.id} style={{ marginBottom: 6 }}>
-                <b>
-                  {(
-                    p.nombreCompleto ||
-                    `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
-                    "—"
-                  )}
-                </b>
-                {" "}— Cédula: {p.cedula || "—"} — Fin: {formatDate(p.fechaFin)}
-                <button
-                  onClick={() => nav(`/paciente/${p.id}`)}
-                  style={{ marginLeft: 8 }}
-                >
-                  Ver
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <section>
+          <h2>Pacientes finalizados</h2>
+          {finalizados.length === 0 ? (
+            <p>No hay pacientes finalizados.</p>
+          ) : (
+            <ul>
+              {finalizados.map((p) => (
+                <li key={p.id} className="card">
+                  <div className="card-body">
+                    <div>
+                      <b>
+                        {
+                          p.nombreCompleto ||
+                          `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
+                          "—"
+                        }
+                      </b>
+                      {" "}— Cédula: {p.cedula || "—"} — Fin: {formatDate(p.fechaFin)}
+                    </div>
+                    <div>
+                      <button
+                        className="btn"
+                        onClick={() => nav(`/paciente/${p.id}`)}
+                      >
+                        Ver
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
+
