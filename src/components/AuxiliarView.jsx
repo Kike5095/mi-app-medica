@@ -15,28 +15,7 @@ import { db } from "../firebaseConfig";
 import VitalCharts from "./VitalCharts";
 import LogoutButton from "./LogoutButton";
 import { parseBP } from "../utils/bp";
-
-function asDate(v) {
-  if (!v) return null;
-  if (v.seconds) return new Date(v.seconds * 1000);
-  if (v instanceof Date) return v;
-  const d = new Date(v);
-  return isNaN(d) ? null : d;
-}
-function fmt(v) {
-  const d = asDate(v);
-  if (!d) return "—";
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
-function finDisplay(p) {
-  return fmt(p.finAt ?? p.finEstimadoAt ?? p.fin);
-}
-function ingresoDisplay(p) {
-  return fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
-}
+import { finDisplay } from "../utils/dates";
 
 export default function AuxiliarView() {
 
