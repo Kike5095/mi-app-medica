@@ -12,6 +12,7 @@ import { db } from "../firebaseConfig";
 import PatientForm from "./PatientForm";
 import LogoutButton from "./LogoutButton";
 import { ingresoDisplay, finDisplay } from "../utils/dates";
+import { isAdmin } from "../utils/roles";
 
 function formatName(p) {
   const name = (p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim();
@@ -30,6 +31,7 @@ function truncate(t, n = 40) {
 export default function AdminView() {
   const [patients, setPatients] = useState([]);
   const [creating, setCreating] = useState(false);
+  const [editingPatient, setEditingPatient] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -106,6 +108,11 @@ export default function AdminView() {
               >
                 Ver historial
               </button>
+              {isAdmin() && (
+                <button className="btn" onClick={() => setEditingPatient(p)}>
+                  Editar
+                </button>
+              )}
               {tipo === "pendiente" && (
                 <button className="btn primary" onClick={() => activar(p)}>
                   Activar
@@ -174,6 +181,14 @@ export default function AdminView() {
           <PatientForm
             onCreated={refrescar}
             onClose={() => setCreating(false)}
+          />
+        )}
+        {editingPatient && (
+          <PatientForm
+            mode="edit"
+            initialValues={editingPatient}
+            onUpdated={refrescar}
+            onClose={() => setEditingPatient(null)}
           />
         )}
       </div>

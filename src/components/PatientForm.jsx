@@ -8,7 +8,10 @@ import {
   where,
   serverTimestamp,
   Timestamp,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
+import { assertAdmin } from "../utils/roles";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";
@@ -19,14 +22,33 @@ function truncate(t, n = 40) {
   return t.length > n ? t.slice(0, n) + "…" : t;
 }
 
-export default function PatientForm({ onClose, onCreated }) {
+export default function PatientForm({
+  onClose,
+  onCreated,
+  mode = "create",
+  initialValues = {},
+  onUpdated,
+}) {
   const [form, setForm] = useState({
-    nombreCompleto: "",
-    cedula: "",
-    finEstimado: "",
+    nombreCompleto: initialValues.nombreCompleto || "",
+    cedula: initialValues.cedula || "",
+    finEstimado: initialValues.finEstimadoAt
+      ? (() => {
+          let d = initialValues.finEstimadoAt;
+          if (d?.toDate) d = d.toDate();
+          if (d instanceof Date && !isNaN(+d)) {
+            return d.toISOString().slice(0, 10);
+          }
+          return "";
+        })()
+      : "",
   });
-  const [edad, setEdad] = useState("");
-  const [diagnostico, setDiagnostico] = useState("");
+  const [edad, setEdad] = useState(
+    initialValues.edad != null ? String(initialValues.edad) : ""
+  );
+  const [diagnostico, setDiagnostico] = useState(
+    initialValues.diagnostico || ""
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -60,41 +82,57 @@ export default function PatientForm({ onClose, onCreated }) {
     }
     setSaving(true);
     try {
-      const q = query(
-        collection(db, "patients"),
-        where("cedula", "==", String(form.cedula).trim())
-      );
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        setError("La cédula ya está registrada");
-        setSaving(false);
-        return;
-      }
       const finEstimadoDate = form.finEstimado
         ? new Date(`${form.finEstimado}T00:00:00`)
         : null;
-      const nuevoPaciente = {
-        nombreCompleto: form.nombreCompleto.trim(),
-        cedula: String(form.cedula).trim(),
-        status: "pendiente",
-        fechaIngreso: serverTimestamp(),
-        ingresoAt: serverTimestamp(),
-        fechaFin: finEstimadoDate
-          ? Timestamp.fromDate(finEstimadoDate)
-          : null,
-        finEstimadoAt: finEstimadoDate,
-        finAt: null,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        edad: nEdad,
-        diagnostico: diag,
-      };
-      await addDoc(collection(db, "patients"), nuevoPaciente);
-      onCreated && onCreated();
-      onClose && onClose();
+      if (mode === "edit") {
+        assertAdmin();
+        const payload = {
+          nombreCompleto: form.nombreCompleto.trim(),
+          cedula: String(form.cedula).trim(),
+          edad: nEdad,
+          diagnostico: diag,
+          finEstimadoAt: finEstimadoDate
+            ? Timestamp.fromDate(finEstimadoDate)
+            : null,
+        };
+        await updateDoc(doc(db, "patients", initialValues.id), payload);
+        onUpdated && onUpdated();
+        onClose && onClose();
+      } else {
+        const q = query(
+          collection(db, "patients"),
+          where("cedula", "==", String(form.cedula).trim())
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          setError("La cédula ya está registrada");
+          setSaving(false);
+          return;
+        }
+        const nuevoPaciente = {
+          nombreCompleto: form.nombreCompleto.trim(),
+          cedula: String(form.cedula).trim(),
+          status: "pendiente",
+          fechaIngreso: serverTimestamp(),
+          ingresoAt: serverTimestamp(),
+          fechaFin: finEstimadoDate
+            ? Timestamp.fromDate(finEstimadoDate)
+            : null,
+          finEstimadoAt: finEstimadoDate,
+          finAt: null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          edad: nEdad,
+          diagnostico: diag,
+        };
+        await addDoc(collection(db, "patients"), nuevoPaciente);
+        onCreated && onCreated();
+        onClose && onClose();
+      }
     } catch (err) {
-      console.error("Error creando paciente", err);
-      setError("Error creando paciente");
+      console.error("Error procesando paciente", err);
+      setError(err.message || "Error procesando paciente");
     } finally {
       setSaving(false);
     }
@@ -119,7 +157,7 @@ export default function PatientForm({ onClose, onCreated }) {
         onSubmit={submit}
         style={{ background: "#fff", padding: 20, borderRadius: 8, width: "100%", maxWidth: 400 }}
       >
-        <h2>Nuevo paciente</h2>
+        <h2>{mode === "edit" ? "Editar paciente" : "Nuevo paciente"}</h2>
 
         <label style={{ display: "block", marginBottom: 8 }}>
           Nombre completo
@@ -186,7 +224,11 @@ export default function PatientForm({ onClose, onCreated }) {
             Cancelar
           </button>
           <button type="submit" disabled={saving} style={{ padding: "8px 12px" }}>
-            {saving ? "Guardando..." : "Guardar"}
+            {saving
+              ? "Guardando..."
+              : mode === "edit"
+              ? "Guardar cambios"
+              : "Guardar"}
           </button>
         </div>
       </form>
