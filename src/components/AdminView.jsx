@@ -12,12 +12,20 @@ import { db } from "../firebaseConfig";
 import PatientForm from "./PatientForm";
 import LogoutButton from "./LogoutButton";
 
-function formatDate(ts) {
-  if (!ts) return "—";
-  const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
-  if (isNaN(d.getTime())) return "—";
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+function asDate(v) {
+  if (!v) return null;
+  if (v.seconds) return new Date(v.seconds * 1000);
+  if (v instanceof Date) return v;
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+function fmt(v) {
+  const d = asDate(v);
+  if (!d) return "—";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 function formatName(p) {
@@ -70,44 +78,51 @@ export default function AdminView() {
 
   const finalizar = (p) => {
     const fecha = new Date();
-    updateLocal(p.id, { status: "finalizado", fechaFin: fecha });
+    updateLocal(p.id, { status: "finalizado", finAt: fecha, fechaFin: fecha });
+    const ts = serverTimestamp();
     updateDoc(doc(db, "patients", p.id), {
       status: "finalizado",
-      fechaFin: serverTimestamp(),
+      finAt: ts,
+      fechaFin: ts,
     });
   };
   const renderRows = (list, tipo) =>
-    list.map((p) => (
-      <tr key={p.id}>
-        <td>{formatName(p)}</td>
-        <td>{p.cedula || "—"}</td>
-        <td>{formatDate(tipo === "finalizado" ? p.fechaFin : p.fechaIngreso)}</td>
-        <td>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              className="btn"
-              onClick={() =>
-                navigate(`/paciente/${p.id}`, { state: { from: "admin" } })
-              }
-            >
-              Ver historial
-            </button>
-            {tipo === "pendiente" && (
-              <button className="btn primary" onClick={() => activar(p)}>
-                Activar
+    list.map((p) => {
+      const ingreso = fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
+      const fin = fmt(p.finAt ?? p.fin);
+      return (
+        <tr key={p.id}>
+          <td>{formatName(p)}</td>
+          <td>{p.cedula || "—"}</td>
+          <td>{ingreso}</td>
+          <td>{fin}</td>
+          <td>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                className="btn"
+                onClick={() =>
+                  navigate(`/paciente/${p.id}`, { state: { from: "admin" } })
+                }
+              >
+                Ver historial
               </button>
-            )}
-            {tipo === "activo" && (
-              <button className="btn danger" onClick={() => finalizar(p)}>
-                Finalizar
-              </button>
-            )}
-          </div>
-        </td>
-      </tr>
-    ));
+              {tipo === "pendiente" && (
+                <button className="btn primary" onClick={() => activar(p)}>
+                  Activar
+                </button>
+              )}
+              {tipo === "activo" && (
+                <button className="btn danger" onClick={() => finalizar(p)}>
+                  Finalizar
+                </button>
+              )}
+            </div>
+          </td>
+        </tr>
+      );
+    });
 
-  const renderTable = (title, list, tipo, fechaCol) => (
+  const renderTable = (title, list, tipo) => (
     <section className="card">
       <div className="card-body">
         <h2>{title}</h2>
@@ -117,14 +132,15 @@ export default function AdminView() {
               <tr>
                 <th>Nombre</th>
                 <th>Cédula</th>
-                <th>{fechaCol}</th>
+                <th>Ingreso</th>
+                <th>Fin</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {list.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>No hay pacientes</td>
+                  <td colSpan={5}>No hay pacientes</td>
                 </tr>
               ) : (
                 renderRows(list, tipo)
@@ -148,9 +164,9 @@ export default function AdminView() {
           Crear paciente
         </button>
 
-        {renderTable("Pendientes", pendientes, "pendiente", "Ingreso")}
-        {renderTable("Activos", activos, "activo", "Ingreso")}
-        {renderTable("Finalizados", finalizados, "finalizado", "Fin")}
+        {renderTable("Pendientes", pendientes, "pendiente")}
+        {renderTable("Activos", activos, "activo")}
+        {renderTable("Finalizados", finalizados, "finalizado")}
 
         {creating && (
           <PatientForm
