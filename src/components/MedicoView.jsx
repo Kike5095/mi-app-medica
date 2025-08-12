@@ -68,6 +68,13 @@ export default function MedicoView() {
     return `${dd}/${mm}/${yyyy}`;
   }
 
+  function finDisplay(p) {
+    return fmt(p.finAt ?? p.finEstimadoAt ?? p.fin);
+  }
+  function ingresoDisplay(p) {
+    return fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
+  }
+
   const finalizar = async (p) => {
     try {
       const ts = serverTimestamp();
@@ -112,8 +119,8 @@ export default function MedicoView() {
           ) : (
             <ul>
               {activos.map((p) => {
-                const ingreso = fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
-                const fin = fmt(p.finAt ?? p.fin);
+                const ingreso = ingresoDisplay(p);
+                const fin = finDisplay(p);
                 return (
                   <li key={p.id} className="card">
                     <div className="card-body">
@@ -156,8 +163,8 @@ export default function MedicoView() {
           ) : (
             <ul>
               {finalizados.map((p) => {
-                const ingreso = fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
-                const fin = fmt(p.finAt ?? p.fin);
+                const ingreso = ingresoDisplay(p);
+                const fin = finDisplay(p);
                 return (
                   <li key={p.id} className="card">
                     <div className="card-body">
