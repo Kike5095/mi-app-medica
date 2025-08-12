@@ -79,11 +79,11 @@ export default function PatientHistoryModal({ patientId, onClose }) {
                 <tr key={r.id}>
                   <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{formatDate(r.createdAt)}</td>
                   <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.temp ?? "-"}</td>
-                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.hr ?? "-"}</td>
-                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.rr ?? "-"}</td>
-                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.bp ?? "-"}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.hr ?? r.fc ?? "-"}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.rr ?? r.fr ?? "-"}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.bp ?? r.ta ?? "-"}</td>
                   <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.spo2 ?? "-"}</td>
-                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.notes || "-"}</td>
+                  <td style={{ borderBottom: "1px solid #eee", padding: "4px 8px" }}>{r.notes || r.nota || "-"}</td>
                 </tr>
               ))}
             </tbody>

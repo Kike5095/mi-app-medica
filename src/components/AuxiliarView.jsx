@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import VitalCharts from "./VitalCharts";
+import { parseBP } from "../utils/bp";
 
 export default function AuxiliarView() {
   const nav = useNavigate();
@@ -73,22 +74,41 @@ export default function AuxiliarView() {
     if (!paciente) return;
 
     // Validaciones mínimas (opcionales)
-    const numOrNull = (v) => v === "" ? null : Number(v);
+    const numOrNull = (v) => (v === "" ? null : Number(v));
+
+    let parsedBP = null;
+    if (ta.trim()) {
+      parsedBP = parseBP(ta);
+      if (!parsedBP) {
+        setInfo("Formato de PA inválido. Ej: 120/80");
+        return;
+      }
+    }
 
     try {
       const vitalsCol = collection(db, "patients", paciente.id, "vitals");
-      await addDoc(vitalsCol, {
-        fc: numOrNull(fc),
-        fr: numOrNull(fr),
-        ta: ta || null,         // "120/80"
-        spo2: numOrNull(spo2),
+      const data = {
+        hr: numOrNull(fc),
+        rr: numOrNull(fr),
         temp: numOrNull(temp),
-        nota: nota || null,
+        spo2: numOrNull(spo2),
+        notes: nota || null,
         createdAt: serverTimestamp(),
-      });
+      };
+      if (parsedBP) {
+        data.bp = parsedBP.text;
+        data.bpSys = parsedBP.sys;
+        data.bpDia = parsedBP.dia;
+      }
+      await addDoc(vitalsCol, data);
 
       // limpiar formulario
-      setFc(""); setFr(""); setTa(""); setSpo2(""); setTemp(""); setNota("");
+      setFc("");
+      setFr("");
+      setTa("");
+      setSpo2("");
+      setTemp("");
+      setNota("");
       setInfo("Signos registrados ✅");
     } catch (e) {
       console.error(e);

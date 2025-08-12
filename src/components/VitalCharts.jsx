@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { db } from "../firebaseConfig";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { parseBP } from "../utils/bp";
 
 import {
   Chart as ChartJS,
@@ -15,13 +16,13 @@ ChartJS.register(
   CategoryScale, LinearScale, TimeScale, Tooltip, Legend
 );
 
-// helper TA "120/80"
-function parseTA(s) {
-  if (!s) return { sys: null, dia: null };
-  const m = String(s).match(/(\d+)\s*\/\s*(\d+)/);
-  if (!m) return { sys: null, dia: null };
-  return { sys: Number(m[1]), dia: Number(m[2]) };
-}
+const getBP = (r) => {
+  if (typeof r.bpSys === "number" && typeof r.bpDia === "number") {
+    return { sys: r.bpSys, dia: r.bpDia };
+  }
+  const parsed = parseBP(r.bp || r.ta);
+  return { sys: parsed?.sys ?? null, dia: parsed?.dia ?? null };
+};
 
 export default function VitalCharts({ patientId }) {
   const [rows, setRows] = useState([]);
@@ -39,13 +40,12 @@ export default function VitalCharts({ patientId }) {
 
   const data = useMemo(() => {
     const labels = rows.map(r => r.createdAt?.toDate?.()?.toLocaleString?.() || "");
-    const fc   = rows.map(r => r.fc ?? null);
-    const fr   = rows.map(r => r.fr ?? null);
+    const fc   = rows.map(r => r.hr ?? r.fc ?? null);
+    const fr   = rows.map(r => r.rr ?? r.fr ?? null);
     const spo2 = rows.map(r => r.spo2 ?? null);
     const temp = rows.map(r => r.temp ?? null);
-    const { sys: _, dia: __ } = parseTA(rows?.[0]?.ta); // evita TS warnings
-    const taSys = rows.map(r => parseTA(r.ta).sys);
-    const taDia = rows.map(r => parseTA(r.ta).dia);
+    const taSys = rows.map(r => getBP(r).sys);
+    const taDia = rows.map(r => getBP(r).dia);
 
     // Colores (Tailwind-ish)
     const cBlue   = "rgba(59,130,246,1)";   // azul
