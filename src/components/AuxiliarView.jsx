@@ -1,10 +1,12 @@
 // src/components/AuxiliarView.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   addDoc,
   collection,
   getDocs,
+  onSnapshot,
+  orderBy,
   query,
   serverTimestamp,
   where,
@@ -20,6 +22,8 @@ export default function AuxiliarView() {
   const [cedulaBuscar, setCedulaBuscar] = useState("");
   const [paciente, setPaciente] = useState(null); // {id, nombre, cedula, estado, ...}
   const [info, setInfo] = useState("");
+  const [chartData, setChartData] = useState([]);
+  const vitalsUnsub = useRef(null);
 
   // formulario signos
   const [fc, setFc] = useState("");
@@ -34,9 +38,60 @@ export default function AuxiliarView() {
     // noop
   }, []);
 
+  const normalizeRecord = (r) => {
+    const toNumber = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    let t = new Date();
+    const c = r.createdAt;
+    if (c?.toDate) t = c.toDate();
+    else if (c?.seconds) t = new Date(c.seconds * 1000);
+    else if (c instanceof Date) t = c;
+
+    let sys = r.bpSys;
+    let dia = r.bpDia;
+    if ((sys == null || dia == null) && r.bp) {
+      const parsed = parseBP(r.bp);
+      if (parsed) {
+        sys = parsed.sys;
+        dia = parsed.dia;
+      }
+    }
+
+    return {
+      t,
+      hr: toNumber(r.hr ?? r.fc),
+      rr: toNumber(r.rr ?? r.fr),
+      temp: toNumber(r.temp),
+      spo2: toNumber(r.spo2),
+      sys: toNumber(sys),
+      dia: toNumber(dia),
+    };
+  };
+
+  const subscribeVitals = (patientId) => {
+    if (vitalsUnsub.current) {
+      vitalsUnsub.current();
+      vitalsUnsub.current = null;
+    }
+    const col = collection(db, "patients", patientId, "vitals");
+    const q = query(col, orderBy("createdAt", "asc"));
+    vitalsUnsub.current = onSnapshot(q, (snap) => {
+      const rows = snap.docs.map((d) => normalizeRecord(d.data()));
+      setChartData(rows);
+    });
+  };
+
   const buscarPaciente = async () => {
     setInfo("");
     setPaciente(null);
+    setChartData([]);
+    if (vitalsUnsub.current) {
+      vitalsUnsub.current();
+      vitalsUnsub.current = null;
+    }
 
     const ced = cedulaBuscar.trim();
     if (!ced) {
@@ -63,6 +118,7 @@ export default function AuxiliarView() {
         return;
       }
       setPaciente(match);
+      subscribeVitals(match.id);
     } catch (e) {
       console.error(e);
       setInfo("Error al buscar paciente.");
@@ -73,8 +129,11 @@ export default function AuxiliarView() {
     e.preventDefault();
     if (!paciente) return;
 
-    // Validaciones mínimas (opcionales)
-    const numOrNull = (v) => (v === "" ? null : Number(v));
+    const toNumber = (v) => {
+      if (v === "") return undefined;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    };
 
     let parsedBP = null;
     if (ta.trim()) {
@@ -87,14 +146,16 @@ export default function AuxiliarView() {
 
     try {
       const vitalsCol = collection(db, "patients", paciente.id, "vitals");
-      const data = {
-        hr: numOrNull(fc),
-        rr: numOrNull(fr),
-        temp: numOrNull(temp),
-        spo2: numOrNull(spo2),
-        notes: nota || null,
-        createdAt: serverTimestamp(),
-      };
+      const data = { createdAt: serverTimestamp() };
+      const hrN = toNumber(fc);
+      const rrN = toNumber(fr);
+      const tempN = toNumber(temp);
+      const spo2N = toNumber(spo2);
+      if (hrN !== undefined) data.hr = hrN;
+      if (rrN !== undefined) data.rr = rrN;
+      if (tempN !== undefined) data.temp = tempN;
+      if (spo2N !== undefined) data.spo2 = spo2N;
+      if (nota.trim()) data.notes = nota.trim();
       if (parsedBP) {
         data.bp = parsedBP.text;
         data.bpSys = parsedBP.sys;
@@ -115,6 +176,15 @@ export default function AuxiliarView() {
       setInfo("No se pudo registrar. Revisa la conexión / permisos.");
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (vitalsUnsub.current) {
+        vitalsUnsub.current();
+        vitalsUnsub.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div style={{ maxWidth: 1100, margin: "20px auto", padding: "0 12px" }}>
@@ -189,7 +259,7 @@ export default function AuxiliarView() {
 
         {/* ========== Columna derecha: gráficas ========== */}
         <div>
-          {paciente && <VitalCharts patientId={paciente.id} />}
+          {paciente && <VitalCharts data={chartData} />}
         </div>
       </div>
     </div>
