@@ -12,6 +12,7 @@ import {
   where,
   setDoc
 } from "firebase/firestore";
+import { parseBP } from "../utils/bp";
 import VitalCharts from "./VitalCharts";
 
 export default function PatientDetail() {
@@ -37,18 +38,16 @@ export default function PatientDetail() {
     return () => unsubscribe();
   }, [id]);
 
-  // carga vitals y busca candidatos cuando cambia el paciente
+  // escucha vitals y busca candidatos cuando cambian
   useEffect(() => {
     if (!id || patient === null) return;
-    (async () => {
-      const vSnap = await getDocs(
-        query(collection(db, `patients/${id}/vitals`), orderBy("timestamp", "desc"))
-      );
-      const v = vSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setVitals(v);
+    const col = collection(db, `patients/${id}/vitals`);
+    const q = query(col, orderBy("createdAt", "asc"));
+    const unsub = onSnapshot(q, async (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setVitals(list);
 
-      // si no hay vitals, buscar otros docs con misma cédula
-      if ((v?.length ?? 0) === 0 && patient) {
+      if (list.length === 0 && patient) {
         const cedula = patient.cedula;
         if (cedula) {
           const dupSnap = await getDocs(
@@ -64,7 +63,8 @@ export default function PatientDetail() {
       } else {
         setCandidatos([]);
       }
-    })();
+    });
+    return () => unsub();
   }, [id, patient]);
 
   const importarDesde = async (legacyIdDoc) => {
@@ -79,9 +79,8 @@ export default function PatientDetail() {
       }
       await Promise.all(batch);
       alert("Signos importados. Recargando…");
-      // recargar vitals
       const vSnap = await getDocs(
-        query(collection(db, `patients/${id}/vitals`), orderBy("timestamp", "desc"))
+        query(collection(db, `patients/${id}/vitals`), orderBy("createdAt", "asc"))
       );
       const v = vSnap.docs.map(d => ({ id: d.id, ...d.data() }));
       setVitals(v);
@@ -144,9 +143,41 @@ export default function PatientDetail() {
           </div>
         )}
 
-        {/* Gráficas si existen */}
         {vitals.length > 0 ? (
-          <VitalCharts vitals={vitals} />
+          <>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>Fecha</th>
+                  <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>FC</th>
+                  <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>FR</th>
+                  <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>TA</th>
+                  <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>SpO₂</th>
+                  <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>Temp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vitals.map(v => {
+                  const bp =
+                    typeof v.bpSys === "number" && typeof v.bpDia === "number"
+                      ? `${v.bpSys}/${v.bpDia}`
+                      : parseBP(v.bp)?.text || "";
+                  const fecha = v.createdAt?.toDate?.()?.toLocaleString?.() || "";
+                  return (
+                    <tr key={v.id}>
+                      <td style={{ padding: "4px 8px" }}>{fecha}</td>
+                      <td style={{ padding: "4px 8px" }}>{v.hr ?? v.fc ?? ""}</td>
+                      <td style={{ padding: "4px 8px" }}>{v.rr ?? v.fr ?? ""}</td>
+                      <td style={{ padding: "4px 8px" }}>{bp}</td>
+                      <td style={{ padding: "4px 8px" }}>{v.spo2 ?? ""}</td>
+                      <td style={{ padding: "4px 8px" }}>{v.temp ?? ""}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <VitalCharts data={vitals} />
+          </>
         ) : (
           <p>Sin registros de signos todavía.</p>
         )}
