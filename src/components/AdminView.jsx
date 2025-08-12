@@ -76,27 +76,16 @@ export default function AdminView() {
       fechaFin: serverTimestamp(),
     });
   };
-
-  const cellStyle = { border: "1px solid #dee2e6", padding: 8 };
-  const btnBase = {
-    padding: "6px 10px",
-    borderRadius: 6,
-    cursor: "pointer",
-    border: "1px solid",
-  };
-
   const renderRows = (list, tipo) =>
     list.map((p) => (
       <tr key={p.id}>
-        <td style={cellStyle}>{formatName(p)}</td>
-        <td style={cellStyle}>{p.cedula || "—"}</td>
-        <td style={cellStyle}>
-          {formatDate(tipo === "finalizado" ? p.fechaFin : p.fechaIngreso)}
-        </td>
-        <td style={cellStyle}>
+        <td>{formatName(p)}</td>
+        <td>{p.cedula || "—"}</td>
+        <td>{formatDate(tipo === "finalizado" ? p.fechaFin : p.fechaIngreso)}</td>
+        <td>
           <div style={{ display: "flex", gap: 8 }}>
             <button
-              style={{ ...btnBase, borderColor: "#ccc" }}
+              className="btn"
               onClick={() =>
                 navigate(`/paciente/${p.id}`, { state: { from: "admin" } })
               }
@@ -104,28 +93,12 @@ export default function AdminView() {
               Ver historial
             </button>
             {tipo === "pendiente" && (
-              <button
-                style={{
-                  ...btnBase,
-                  borderColor: "#198754",
-                  background: "#198754",
-                  color: "#fff",
-                }}
-                onClick={() => activar(p)}
-              >
+              <button className="btn primary" onClick={() => activar(p)}>
                 Activar
               </button>
             )}
             {tipo === "activo" && (
-              <button
-                style={{
-                  ...btnBase,
-                  borderColor: "#dc3545",
-                  background: "#dc3545",
-                  color: "#fff",
-                }}
-                onClick={() => finalizar(p)}
-              >
+              <button className="btn danger" onClick={() => finalizar(p)}>
                 Finalizar
               </button>
             )}
@@ -135,80 +108,57 @@ export default function AdminView() {
     ));
 
   const renderTable = (title, list, tipo, fechaCol) => (
-    <section style={{ marginBottom: 32 }}>
-      <h2>{title}</h2>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={cellStyle}>Nombre</th>
-            <th style={cellStyle}>Cédula</th>
-            <th style={cellStyle}>{fechaCol}</th>
-            <th style={cellStyle}>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.length === 0 ? (
-            <tr>
-              <td style={cellStyle} colSpan={4}>
-                No hay pacientes
-              </td>
-            </tr>
-          ) : (
-            renderRows(list, tipo)
-          )}
-        </tbody>
-      </table>
+    <section className="card">
+      <div className="card-body">
+        <h2>{title}</h2>
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>{fechaCol}</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.length === 0 ? (
+                <tr>
+                  <td colSpan={4}>No hay pacientes</td>
+                </tr>
+              ) : (
+                renderRows(list, tipo)
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
   );
 
   return (
-    <div className="admin-view" style={{ padding: 20 }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <h1>Pacientes</h1>
-        <LogoutButton
-          style={{
-            padding: "8px 12px",
-            borderRadius: 6,
-            border: "1px solid #dc3545",
-            background: "#dc3545",
-            color: "#fff",
-            cursor: "pointer",
-          }}
-        />
-      </header>
+    <div className="page">
+      <div className="container">
+        <div className="section-header">
+          <h1 className="section-title">Pacientes</h1>
+          <LogoutButton />
+        </div>
 
-      <button
-        onClick={() => setCreating(true)}
-        style={{
-          padding: "8px 12px",
-          borderRadius: 6,
-          border: "1px solid #0d6efd",
-          background: "#0d6efd",
-          color: "#fff",
-          cursor: "pointer",
-          marginBottom: 16,
-        }}
-      >
-        Crear paciente
-      </button>
+        <button className="btn primary" onClick={() => setCreating(true)}>
+          Crear paciente
+        </button>
 
-      {renderTable("Pendientes", pendientes, "pendiente", "Ingreso")}
-      {renderTable("Activos", activos, "activo", "Ingreso")}
-      {renderTable("Finalizados", finalizados, "finalizado", "Fin")}
+        {renderTable("Pendientes", pendientes, "pendiente", "Ingreso")}
+        {renderTable("Activos", activos, "activo", "Ingreso")}
+        {renderTable("Finalizados", finalizados, "finalizado", "Fin")}
 
-      {creating && (
-        <PatientForm
-          onCreated={refrescar}
-          onClose={() => setCreating(false)}
-        />
-      )}
+        {creating && (
+          <PatientForm
+            onCreated={refrescar}
+            onClose={() => setCreating(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }
