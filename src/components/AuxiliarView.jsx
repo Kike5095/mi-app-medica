@@ -17,6 +17,15 @@ import LogoutButton from "./LogoutButton";
 import { parseBP } from "../utils/bp";
 import { finDisplay } from "../utils/dates";
 
+function showVal(v) {
+  return v || v === 0 ? String(v) : "—";
+}
+
+function truncate(t, n = 40) {
+  if (!t) return "—";
+  return t.length > n ? t.slice(0, n) + "…" : t;
+}
+
 export default function AuxiliarView() {
 
   const [cedulaBuscar, setCedulaBuscar] = useState("");
@@ -233,6 +242,12 @@ export default function AuxiliarView() {
                     </p>
                     <p>
                       <b>Estado:</b> {paciente.status || paciente.estado || "-"}
+                    </p>
+                    <p>
+                      <b>Edad:</b> {showVal(paciente?.edad)}
+                    </p>
+                    <p>
+                      <b>Diagnóstico:</b> {truncate(paciente?.diagnostico, 80)}
                     </p>
                     <p>
                       <b>Fin:</b> {finDisplay(paciente)}

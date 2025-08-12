@@ -18,6 +18,15 @@ function formatName(p) {
   return name || "—";
 }
 
+function showVal(v) {
+  return v || v === 0 ? String(v) : "—";
+}
+
+function truncate(t, n = 40) {
+  if (!t) return "—";
+  return t.length > n ? t.slice(0, n) + "…" : t;
+}
+
 export default function AdminView() {
   const [patients, setPatients] = useState([]);
   const [creating, setCreating] = useState(false);
@@ -80,6 +89,8 @@ export default function AdminView() {
         <tr key={p.id}>
           <td>{formatName(p)}</td>
           <td>{p.cedula || "—"}</td>
+          <td>{showVal(p.edad)}</td>
+          <td title={p.diagnostico || ""}>{truncate(p.diagnostico, 30)}</td>
           <td>{ingreso}</td>
           <td>
             {fin}
@@ -121,6 +132,8 @@ export default function AdminView() {
               <tr>
                 <th>Nombre</th>
                 <th>Cédula</th>
+                <th>Edad</th>
+                <th>Diagnóstico</th>
                 <th>Ingreso</th>
                 <th>Fin</th>
                 <th>Acciones</th>
@@ -129,7 +142,7 @@ export default function AdminView() {
             <tbody>
               {list.length === 0 ? (
                 <tr>
-                  <td colSpan={5}>No hay pacientes</td>
+                  <td colSpan={7}>No hay pacientes</td>
                 </tr>
               ) : (
                 renderRows(list, tipo)
