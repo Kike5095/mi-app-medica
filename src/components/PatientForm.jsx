@@ -54,7 +54,9 @@ export default function PatientForm({ onClose, onCreated }) {
         cedula: String(form.cedula).trim(),
         status: "pendiente",
         fechaIngreso: serverTimestamp(),
+        ingresoAt: serverTimestamp(),
         fechaFin: Timestamp.fromDate(new Date(form.fechaFin)),
+        finAt: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

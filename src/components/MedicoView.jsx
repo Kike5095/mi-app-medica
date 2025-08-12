@@ -37,10 +37,10 @@ export default function MedicoView() {
         );
 
         const byDate = (a, b, field) =>
-          (b[field]?.seconds || b[field] || 0) - (a[field]?.seconds || a[field] || 0);
+          (asDate(b[field])?.getTime() || 0) - (asDate(a[field])?.getTime() || 0);
 
-        setActivos([...act].sort((a, b) => byDate(a, b, "fechaIngreso")));
-        setFinalizados([...fin].sort((a, b) => byDate(a, b, "fechaFin")));
+        setActivos([...act].sort((a, b) => byDate(a, b, "ingresoAt")));
+        setFinalizados([...fin].sort((a, b) => byDate(a, b, "finAt")));
         setCargando(false);
       },
       (e) => {
@@ -52,10 +52,16 @@ export default function MedicoView() {
     return () => unsub();
   }, []);
 
-  function formatDate(ts) {
-    if (!ts) return "-";
-    const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
-    if (isNaN(d.getTime())) return "-";
+  function asDate(v) {
+    if (!v) return null;
+    if (v.seconds) return new Date(v.seconds * 1000);
+    if (v instanceof Date) return v;
+    const d = new Date(v);
+    return isNaN(d) ? null : d;
+  }
+  function fmt(v) {
+    const d = asDate(v);
+    if (!d) return "—";
     const dd = String(d.getDate()).padStart(2, "0");
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yyyy = d.getFullYear();
@@ -64,9 +70,11 @@ export default function MedicoView() {
 
   const finalizar = async (p) => {
     try {
+      const ts = serverTimestamp();
       await updateDoc(doc(db, "patients", p.id), {
         status: "finalizado",
-        fechaFin: serverTimestamp(),
+        finAt: ts,
+        fechaFin: ts,
       });
     } catch (e) {
       console.error(e);
@@ -103,36 +111,40 @@ export default function MedicoView() {
             <p>No hay pacientes activos.</p>
           ) : (
             <ul>
-              {activos.map((p) => (
-                <li key={p.id} className="card">
-                  <div className="card-body">
-                    <div>
-                      <b>
-                        {
-                          p.nombreCompleto ||
-                          `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
-                          "—"
-                        }
-                      </b>
-                      {" "}— Cédula: {p.cedula || "—"} — Ingreso: {formatDate(p.fechaIngreso)}
+              {activos.map((p) => {
+                const ingreso = fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
+                const fin = fmt(p.finAt ?? p.fin);
+                return (
+                  <li key={p.id} className="card">
+                    <div className="card-body">
+                      <div>
+                        <b>
+                          {
+                            p.nombreCompleto ||
+                            `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
+                            "—"
+                          }
+                        </b>
+                        {" "}— Cédula: {p.cedula || "—"} — Ingreso: {ingreso} — Fin: {fin}
+                      </div>
+                      <div>
+                        <button
+                          className="btn"
+                          onClick={() => nav(`/paciente/${p.id}`)}
+                        >
+                          Ver
+                        </button>
+                        <button
+                          className="btn danger"
+                          onClick={() => finalizar(p)}
+                        >
+                          Finalizar
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <button
-                        className="btn"
-                        onClick={() => nav(`/paciente/${p.id}`)}
-                      >
-                        Ver
-                      </button>
-                      <button
-                        className="btn danger"
-                        onClick={() => finalizar(p)}
-                      >
-                        Finalizar
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -143,30 +155,34 @@ export default function MedicoView() {
             <p>No hay pacientes finalizados.</p>
           ) : (
             <ul>
-              {finalizados.map((p) => (
-                <li key={p.id} className="card">
-                  <div className="card-body">
-                    <div>
-                      <b>
-                        {
-                          p.nombreCompleto ||
-                          `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
-                          "—"
-                        }
-                      </b>
-                      {" "}— Cédula: {p.cedula || "—"} — Fin: {formatDate(p.fechaFin)}
+              {finalizados.map((p) => {
+                const ingreso = fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
+                const fin = fmt(p.finAt ?? p.fin);
+                return (
+                  <li key={p.id} className="card">
+                    <div className="card-body">
+                      <div>
+                        <b>
+                          {
+                            p.nombreCompleto ||
+                            `${p.firstName || ""} ${p.lastName || ""}`.trim() ||
+                            "—"
+                          }
+                        </b>
+                        {" "}— Cédula: {p.cedula || "—"} — Ingreso: {ingreso} — Fin: {fin}
+                      </div>
+                      <div>
+                        <button
+                          className="btn"
+                          onClick={() => nav(`/paciente/${p.id}`)}
+                        >
+                          Ver
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <button
-                        className="btn"
-                        onClick={() => nav(`/paciente/${p.id}`)}
-                      >
-                        Ver
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
