@@ -1,5 +1,5 @@
 import { db, ensureAuth } from "../firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export async function getUserByCedula(cedula) {
   await ensureAuth();
@@ -13,4 +13,18 @@ export async function getUserByCedula(cedula) {
     correo: data.correo || "",
     role: data.role || data.rol || "",
   };
+}
+
+export async function createUser({ cedula, nombreCompleto, correo, role }) {
+  await ensureAuth();
+  const id = String(cedula).trim();
+  const ref = doc(db, "users", id);
+  await setDoc(ref, {
+    cedula: id,
+    nombreCompleto,
+    correo,
+    role,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
 }
