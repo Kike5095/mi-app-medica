@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-import Login from "./components/Login.jsx";
+import LoginByCedula from "./components/LoginByCedula.jsx";
 import Register from "./components/Register.jsx";
 import MedicoView from "./components/MedicoView.jsx";
 import AuxiliarView from "./components/AuxiliarView.jsx";
@@ -34,8 +34,8 @@ export default function App() {
 
       <Routes>
         {/* públicas */}
-        <Route path="/" element={<Login />} />
-        <Route path="/registrar" element={<Register />} />
+        <Route path="/" element={<LoginByCedula />} />
+        <Route path="/registro" element={<Register />} />
 
         {/* dejamos rutas SIEMPRE disponibles (más simple p/ superadmin) */}
         <Route path="/medico" element={<MedicoView />} />
