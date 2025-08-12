@@ -124,6 +124,19 @@ export default function PatientDetail() {
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: 16, width: "100%" }}>
       <button onClick={handleBack} style={{ marginBottom: 12 }}>← Volver</button>
       <h1>Detalle del paciente</h1>
+      <style>{`
+        .note-summary {
+          cursor: pointer;
+          color: #0b5ed7;
+          text-decoration: underline;
+          display: block;
+          max-width: 180px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .note-full { white-space: pre-wrap; word-break: break-word; }
+      `}</style>
       <>
         <div style={{ marginBottom: 8 }}>
           <b>Nombre:</b> {patient.nombreCompleto || `${patient.firstName || ""} ${patient.lastName || ""}`.trim() || "—"}
@@ -163,6 +176,7 @@ export default function PatientDetail() {
                   <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>TA</th>
                   <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>SpO₂</th>
                   <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>Temp</th>
+                  <th style={{ textAlign: "left", borderBottom: "1px solid #ccc" }}>Nota</th>
                 </tr>
               </thead>
               <tbody>
@@ -172,6 +186,8 @@ export default function PatientDetail() {
                       ? `${v.bpSys}/${v.bpDia}`
                       : parseBP(v.bp)?.text || "";
                   const fecha = v.createdAt?.toDate?.()?.toLocaleString?.() || "";
+                  const note = v.note ?? v.notes ?? "";
+                  const preview = note.length > 80 ? note.slice(0, 80).trimEnd() + "…" : note;
                   return (
                     <tr key={v.id}>
                       <td style={{ padding: "4px 8px" }}>{fecha}</td>
@@ -180,6 +196,16 @@ export default function PatientDetail() {
                       <td style={{ padding: "4px 8px" }}>{bp}</td>
                       <td style={{ padding: "4px 8px" }}>{v.spo2 ?? ""}</td>
                       <td style={{ padding: "4px 8px" }}>{v.temp ?? ""}</td>
+                      <td style={{ padding: "4px 8px" }}>
+                        {note ? (
+                          <details>
+                            <summary className="note-summary">{preview}</summary>
+                            <div className="note-full">{note}</div>
+                          </details>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
