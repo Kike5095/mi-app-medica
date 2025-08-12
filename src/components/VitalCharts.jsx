@@ -1,7 +1,5 @@
 // src/components/VitalCharts.jsx
-import { useEffect, useMemo, useState } from "react";
-import { db } from "../firebaseConfig";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { useMemo } from "react";
 import { parseBP } from "../utils/bp";
 
 import {
@@ -24,21 +22,10 @@ const getBP = (r) => {
   return { sys: parsed?.sys ?? null, dia: parsed?.dia ?? null };
 };
 
-export default function VitalCharts({ patientId }) {
-  const [rows, setRows] = useState([]);
+export default function VitalCharts({ data = [] }) {
+  const rows = data || [];
 
-  useEffect(() => {
-    if (!patientId) return;
-    const col = collection(db, "patients", patientId, "vitals");
-    const q = query(col, orderBy("createdAt", "asc"));
-    const unsub = onSnapshot(q, (snap) => {
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setRows(list);
-    });
-    return () => unsub();
-  }, [patientId]);
-
-  const data = useMemo(() => {
+  const charts = useMemo(() => {
     const labels = rows.map(r => r.createdAt?.toDate?.()?.toLocaleString?.() || "");
     const fc   = rows.map(r => r.hr ?? r.fc ?? null);
     const fr   = rows.map(r => r.rr ?? r.fr ?? null);
@@ -113,23 +100,23 @@ export default function VitalCharts({ patientId }) {
       <h3 style={{ marginTop: 0 }}>Gráficas</h3>
 
       <div className="chart-card">
-        <Line data={data.fc} options={opts} />
+        <Line data={charts.fc} options={opts} />
       </div>
 
       <div className="chart-card">
-        <Line data={data.fr} options={opts} />
+        <Line data={charts.fr} options={opts} />
       </div>
 
       <div className="chart-card">
-        <Line data={data.ta} options={opts} />
+        <Line data={charts.ta} options={opts} />
       </div>
 
       <div className="chart-card">
-        <Line data={data.spo2} options={opts} />
+        <Line data={charts.spo2} options={opts} />
       </div>
 
       <div className="chart-card">
-        <Line data={data.temp} options={opts} />
+        <Line data={charts.temp} options={opts} />
       </div>
     </div>
   );
