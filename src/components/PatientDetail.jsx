@@ -1,6 +1,6 @@
 // src/components/PatientDetail.jsx
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import {
   collection,
@@ -18,9 +18,18 @@ import VitalCharts from "./VitalCharts";
 export default function PatientDetail() {
   const { id } = useParams(); // idDoc del paciente (ahora suele ser la cédula)
   const nav = useNavigate();
+  const location = useLocation();
   const [patient, setPatient] = useState(undefined);
   const [vitals, setVitals] = useState([]);
   const [candidatos, setCandidatos] = useState([]); // posibles docs viejos para importar
+
+  const handleBack = () => {
+    if (location.state?.from === "admin") {
+      nav("/admin");
+    } else {
+      nav(-1);
+    }
+  };
 
   // escucha al paciente y carga vitals
   useEffect(() => {
@@ -93,8 +102,8 @@ export default function PatientDetail() {
 
   if (patient === undefined) {
     return (
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: 16 }}>
-        <button onClick={() => nav(-1)} style={{ marginBottom: 12 }}>← Volver</button>
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: 16, width: "100%" }}>
+        <button onClick={handleBack} style={{ marginBottom: 12 }}>← Volver</button>
         <h1>Detalle del paciente</h1>
         <p>Cargando...</p>
       </div>
@@ -103,8 +112,8 @@ export default function PatientDetail() {
 
   if (patient === null) {
     return (
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: 16 }}>
-        <button onClick={() => nav(-1)} style={{ marginBottom: 12 }}>← Volver</button>
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: 16, width: "100%" }}>
+        <button onClick={handleBack} style={{ marginBottom: 12 }}>← Volver</button>
         <h1>Detalle del paciente</h1>
         <p>Paciente no encontrado.</p>
       </div>
@@ -112,8 +121,8 @@ export default function PatientDetail() {
   }
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: 16 }}>
-      <button onClick={() => nav(-1)} style={{ marginBottom: 12 }}>← Volver</button>
+    <div style={{ maxWidth: 1000, margin: "0 auto", padding: 16, width: "100%" }}>
+      <button onClick={handleBack} style={{ marginBottom: 12 }}>← Volver</button>
       <h1>Detalle del paciente</h1>
       <>
         <div style={{ marginBottom: 8 }}>

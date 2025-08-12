@@ -7,8 +7,8 @@ import {
   serverTimestamp,
   getDocs,
 } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import PatientHistoryModal from "./PatientHistoryModal";
 import PatientForm from "./PatientForm";
 import LogoutButton from "./LogoutButton";
 
@@ -27,8 +27,8 @@ function formatName(p) {
 
 export default function AdminView() {
   const [patients, setPatients] = useState([]);
-  const [historyId, setHistoryId] = useState(null);
   const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const q = collection(db, "patients");
@@ -97,7 +97,9 @@ export default function AdminView() {
           <div style={{ display: "flex", gap: 8 }}>
             <button
               style={{ ...btnBase, borderColor: "#ccc" }}
-              onClick={() => setHistoryId(p.id)}
+              onClick={() =>
+                navigate(`/paciente/${p.id}`, { state: { from: "admin" } })
+              }
             >
               Ver historial
             </button>
@@ -201,12 +203,6 @@ export default function AdminView() {
       {renderTable("Activos", activos, "activo", "Ingreso")}
       {renderTable("Finalizados", finalizados, "finalizado", "Fin")}
 
-      {historyId && (
-        <PatientHistoryModal
-          patientId={historyId}
-          onClose={() => setHistoryId(null)}
-        />
-      )}
       {creating && (
         <PatientForm
           onCreated={refrescar}
