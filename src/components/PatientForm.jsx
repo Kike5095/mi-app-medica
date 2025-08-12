@@ -14,7 +14,7 @@ export default function PatientForm({ onClose, onCreated }) {
   const [form, setForm] = useState({
     nombreCompleto: "",
     cedula: "",
-    fechaFin: "",
+    finEstimado: "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -30,7 +30,7 @@ export default function PatientForm({ onClose, onCreated }) {
     if (
       !form.nombreCompleto.trim() ||
       !form.cedula.trim() ||
-      !form.fechaFin
+      !form.finEstimado
     ) {
       setError(
         "Nombre completo, cédula y fecha de finalización son obligatorios"
@@ -49,13 +49,19 @@ export default function PatientForm({ onClose, onCreated }) {
         setSaving(false);
         return;
       }
+      const finEstimadoDate = form.finEstimado
+        ? new Date(`${form.finEstimado}T00:00:00`)
+        : null;
       await addDoc(collection(db, "patients"), {
         nombreCompleto: form.nombreCompleto.trim(),
         cedula: String(form.cedula).trim(),
         status: "pendiente",
         fechaIngreso: serverTimestamp(),
         ingresoAt: serverTimestamp(),
-        fechaFin: Timestamp.fromDate(new Date(form.fechaFin)),
+        fechaFin: finEstimadoDate
+          ? Timestamp.fromDate(finEstimadoDate)
+          : null,
+        finEstimadoAt: finEstimadoDate,
         finAt: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -117,8 +123,8 @@ export default function PatientForm({ onClose, onCreated }) {
           Fecha de finalización
           <input
             type="date"
-            name="fechaFin"
-            value={form.fechaFin}
+            name="finEstimado"
+            value={form.finEstimado}
             onChange={change}
             required
             style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}

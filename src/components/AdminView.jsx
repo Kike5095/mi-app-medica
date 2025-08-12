@@ -28,6 +28,13 @@ function fmt(v) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+function finDisplay(p) {
+  return fmt(p.finAt ?? p.finEstimadoAt ?? p.fin);
+}
+function ingresoDisplay(p) {
+  return fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
+}
+
 function formatName(p) {
   const name = (p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim();
   return name || "—";
@@ -88,14 +95,18 @@ export default function AdminView() {
   };
   const renderRows = (list, tipo) =>
     list.map((p) => {
-      const ingreso = fmt(p.ingresoAt ?? p.ingreso ?? p.createdAt);
-      const fin = fmt(p.finAt ?? p.fin);
+      const ingreso = ingresoDisplay(p);
+      const fin = finDisplay(p);
+      const isEstimado = !!p.finEstimadoAt && !p.finAt;
       return (
         <tr key={p.id}>
           <td>{formatName(p)}</td>
           <td>{p.cedula || "—"}</td>
           <td>{ingreso}</td>
-          <td>{fin}</td>
+          <td>
+            {fin}
+            {isEstimado ? " (planificado)" : ""}
+          </td>
           <td>
             <div style={{ display: "flex", gap: 8 }}>
               <button
