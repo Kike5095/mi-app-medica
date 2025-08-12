@@ -1,6 +1,5 @@
 // src/components/AuxiliarView.jsx
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   addDoc,
   collection,
@@ -14,10 +13,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import VitalCharts from "./VitalCharts";
+import LogoutButton from "./LogoutButton";
 import { parseBP } from "../utils/bp";
 
 export default function AuxiliarView() {
-  const nav = useNavigate();
 
   const [cedulaBuscar, setCedulaBuscar] = useState("");
   const [paciente, setPaciente] = useState(null); // {id, nombre, cedula, estado, ...}
@@ -187,79 +186,113 @@ export default function AuxiliarView() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 1100, margin: "20px auto", padding: "0 12px" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <h1>Auxiliar – Registro de signos</h1>
-        <button onClick={() => nav("/")} >Salir</button>
-      </header>
-
-      <div className="twocol">
-        {/* ========== Columna izquierda ========== */}
-        <div>
-          {/* Buscar paciente */}
-          <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
-            <label style={{ whiteSpace: "nowrap" }}>Cédula del paciente:</label>
-            <input
-              placeholder="Ej: 32280664"
-              style={{ maxWidth: 220 }}
-              value={cedulaBuscar}
-              onChange={e => setCedulaBuscar(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && buscarPaciente()}
-            />
-            <button onClick={buscarPaciente}>Buscar</button>
-          </div>
-
-          {info && <p style={{ color: info.includes("✅") ? "green" : "crimson" }}>{info}</p>}
-
-          {/* Ficha de paciente */}
-          {paciente && (
-            <>
-              <h2>Paciente</h2>
-              <p>
-                <b>Nombre:</b>{" "}
-                {(
-                  paciente.nombreCompleto ||
-                  `${paciente.firstName || ""} ${paciente.lastName || ""}`.trim()
-                ) || ""}
-              </p>
-              <p><b>Cédula:</b> {paciente.cedula}</p>
-              <p><b>Estado:</b> {paciente.status || paciente.estado || "-"}</p>
-
-              <h2>Nuevo registro de signos</h2>
-              <form onSubmit={registrarSignos} style={{ display: "grid", gap: 8, maxWidth: 600 }}>
-                <input
-                  placeholder="Frecuencia cardiaca (lpm)"
-                  value={fc} onChange={e => setFc(e.target.value)}
-                />
-                <input
-                  placeholder="Frecuencia respiratoria (rpm)"
-                  value={fr} onChange={e => setFr(e.target.value)}
-                />
-                <input
-                  placeholder="Tensión arterial (mmHg, ej: 120/80)"
-                  value={ta} onChange={e => setTa(e.target.value)}
-                />
-                <input
-                  placeholder="Saturación O₂ (%)"
-                  value={spo2} onChange={e => setSpo2(e.target.value)}
-                />
-                <input
-                  placeholder="Temperatura (°C)"
-                  value={temp} onChange={e => setTemp(e.target.value)}
-                />
-                <textarea
-                  placeholder="Nota de enfermería"
-                  value={nota} onChange={e => setNota(e.target.value)}
-                />
-                <button className="primary">Registrar signos</button>
-              </form>
-            </>
-          )}
+    <div className="page">
+      <div className="container">
+        <div className="section-header">
+          <h1 className="section-title">Auxiliar – Registro de signos</h1>
+          <LogoutButton />
         </div>
 
-        {/* ========== Columna derecha: gráficas ========== */}
-        <div>
-          {paciente && <VitalCharts data={chartData} />}
+        <div className="twocol">
+          {/* ========== Columna izquierda ========== */}
+          <div>
+            <section className="card">
+              <div className="card-body">
+                {/* Buscar paciente */}
+                <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+                  <label style={{ whiteSpace: "nowrap" }}>Cédula del paciente:</label>
+                  <input
+                    className="input"
+                    placeholder="Ej: 32280664"
+                    style={{ maxWidth: 220 }}
+                    value={cedulaBuscar}
+                    onChange={(e) => setCedulaBuscar(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && buscarPaciente()}
+                  />
+                  <button className="btn" onClick={buscarPaciente}>Buscar</button>
+                </div>
+
+                {info && (
+                  <p style={{ color: info.includes("✅") ? "green" : "crimson" }}>{info}</p>
+                )}
+
+                {/* Ficha de paciente */}
+                {paciente && (
+                  <>
+                    <h2>Paciente</h2>
+                    <p>
+                      <b>Nombre:</b>{" "}
+                      {(
+                        paciente.nombreCompleto ||
+                        `${paciente.firstName || ""} ${paciente.lastName || ""}`.trim()
+                      ) || ""}
+                    </p>
+                    <p>
+                      <b>Cédula:</b> {paciente.cedula}
+                    </p>
+                    <p>
+                      <b>Estado:</b> {paciente.status || paciente.estado || "-"}
+                    </p>
+
+                    <h2>Nuevo registro de signos</h2>
+                    <form
+                      onSubmit={registrarSignos}
+                      style={{ display: "grid", gap: 8, maxWidth: 600 }}
+                    >
+                      <input
+                        className="input"
+                        placeholder="Frecuencia cardiaca (lpm)"
+                        value={fc}
+                        onChange={(e) => setFc(e.target.value)}
+                      />
+                      <input
+                        className="input"
+                        placeholder="Frecuencia respiratoria (rpm)"
+                        value={fr}
+                        onChange={(e) => setFr(e.target.value)}
+                      />
+                      <input
+                        className="input"
+                        placeholder="Tensión arterial (mmHg, ej: 120/80)"
+                        value={ta}
+                        onChange={(e) => setTa(e.target.value)}
+                      />
+                      <input
+                        className="input"
+                        placeholder="Saturación O₂ (%)"
+                        value={spo2}
+                        onChange={(e) => setSpo2(e.target.value)}
+                      />
+                      <input
+                        className="input"
+                        placeholder="Temperatura (°C)"
+                        value={temp}
+                        onChange={(e) => setTemp(e.target.value)}
+                      />
+                      <textarea
+                        className="textarea"
+                        placeholder="Nota de enfermería"
+                        value={nota}
+                        onChange={(e) => setNota(e.target.value)}
+                      />
+                      <button className="btn primary">Registrar signos</button>
+                    </form>
+                  </>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* ========== Columna derecha: gráficas ========== */}
+          <div>
+            {paciente && (
+              <section className="card">
+                <div className="card-body">
+                  <VitalCharts data={chartData} />
+                </div>
+              </section>
+            )}
+          </div>
         </div>
       </div>
     </div>
