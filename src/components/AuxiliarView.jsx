@@ -1,9 +1,14 @@
 // src/components/AuxiliarView.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  addDoc, collection, doc, getDocs, getDoc,
-  orderBy, query, serverTimestamp, where
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+  limit,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import VitalCharts from "./VitalCharts";
@@ -40,16 +45,20 @@ export default function AuxiliarView() {
     try {
       const col = collection(db, "patients");
       let q;
-      try { q = query(col, where("cedula", "==", ced)); }
-      catch { q = col; } // fallback si reglas o índices faltan
+      try {
+        q = query(col, where("cedula", "==", ced), limit(1));
+      } catch {
+        q = query(col, limit(1));
+      }
 
       const snap = await getDocs(q);
       const match = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .find(p => String(p.cedula) === ced);
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .find((p) => String(p.cedula) === ced);
 
       if (!match) {
-        setInfo("No se encontró paciente con esa cédula.");
+        setPaciente(null);
+        setInfo("Paciente no encontrado");
         return;
       }
       setPaciente(match);
@@ -105,6 +114,7 @@ export default function AuxiliarView() {
               style={{ maxWidth: 220 }}
               value={cedulaBuscar}
               onChange={e => setCedulaBuscar(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && buscarPaciente()}
             />
             <button onClick={buscarPaciente}>Buscar</button>
           </div>
@@ -115,9 +125,15 @@ export default function AuxiliarView() {
           {paciente && (
             <>
               <h2>Paciente</h2>
-              <p><b>Nombre:</b> {paciente.nombre || "—"}</p>
+              <p>
+                <b>Nombre:</b>{" "}
+                {(
+                  paciente.nombreCompleto ||
+                  `${paciente.firstName || ""} ${paciente.lastName || ""}`.trim()
+                ) || ""}
+              </p>
               <p><b>Cédula:</b> {paciente.cedula}</p>
-              <p><b>Estado:</b> {paciente.estado || "—"}</p>
+              <p><b>Estado:</b> {paciente.status || paciente.estado || "-"}</p>
 
               <h2>Nuevo registro de signos</h2>
               <form onSubmit={registrarSignos} style={{ display: "grid", gap: 8, maxWidth: 600 }}>
