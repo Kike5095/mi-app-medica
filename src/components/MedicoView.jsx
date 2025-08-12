@@ -12,6 +12,15 @@ import {
 import LogoutButton from "./LogoutButton";
 import { asDate, ingresoDisplay, finDisplay } from "../utils/dates";
 
+function showVal(v) {
+  return v || v === 0 ? String(v) : "—";
+}
+
+function truncate(t, n = 40) {
+  if (!t) return "—";
+  return t.length > n ? t.slice(0, n) + "…" : t;
+}
+
 export default function MedicoView() {
   const nav = useNavigate();
   const { state } = useLocation() || {};
@@ -111,7 +120,12 @@ export default function MedicoView() {
                             "—"
                           }
                         </b>
-                        {" "}— Cédula: {p.cedula || "—"} — Ingreso: {ingreso} — Fin: {fin}
+                        <div className="muted">
+                          Cédula: {p.cedula || "—"} · Edad: {showVal(p.edad)} · Dx: {truncate(p.diagnostico, 40)}
+                        </div>
+                        <div className="muted">
+                          Ingreso: {ingreso} · Fin: {fin}
+                        </div>
                       </div>
                       <div>
                         <button
@@ -155,7 +169,12 @@ export default function MedicoView() {
                             "—"
                           }
                         </b>
-                        {" "}— Cédula: {p.cedula || "—"} — Ingreso: {ingreso} — Fin: {fin}
+                        <div className="muted">
+                          Cédula: {p.cedula || "—"} · Edad: {showVal(p.edad)} · Dx: {truncate(p.diagnostico, 40)}
+                        </div>
+                        <div className="muted">
+                          Ingreso: {ingreso} · Fin: {fin}
+                        </div>
                       </div>
                       <div>
                         <button

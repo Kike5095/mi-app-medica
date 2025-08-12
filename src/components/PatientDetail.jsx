@@ -16,6 +16,15 @@ import { parseBP } from "../utils/bp";
 import VitalCharts from "./VitalCharts";
 import LogoutButton from "./LogoutButton";
 
+function showVal(v) {
+  return v || v === 0 ? String(v) : "—";
+}
+
+function truncate(t, n = 40) {
+  if (!t) return "—";
+  return t.length > n ? t.slice(0, n) + "…" : t;
+}
+
 export default function PatientDetail() {
   const { id } = useParams(); // idDoc del paciente (ahora suele ser la cédula)
   const nav = useNavigate();
@@ -167,6 +176,12 @@ export default function PatientDetail() {
             </div>
             <div style={{ marginBottom: 8 }}>
               <b>Cédula:</b> {patient.cedula || "—"}
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <b>Edad:</b> {showVal(patient.edad)}
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <b>Diagnóstico:</b> {patient.diagnostico || "—"}
             </div>
             <div style={{ marginBottom: 16 }}>
               <b>Estado:</b> {patient.status || "—"}

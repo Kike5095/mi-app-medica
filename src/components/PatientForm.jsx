@@ -10,12 +10,23 @@ import {
   Timestamp,
 } from "firebase/firestore";
 
+function showVal(v) {
+  return v || v === 0 ? String(v) : "—";
+}
+
+function truncate(t, n = 40) {
+  if (!t) return "—";
+  return t.length > n ? t.slice(0, n) + "…" : t;
+}
+
 export default function PatientForm({ onClose, onCreated }) {
   const [form, setForm] = useState({
     nombreCompleto: "",
     cedula: "",
     finEstimado: "",
   });
+  const [edad, setEdad] = useState("");
+  const [diagnostico, setDiagnostico] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,6 +48,16 @@ export default function PatientForm({ onClose, onCreated }) {
       );
       return;
     }
+    const nEdad = Number(edad);
+    if (Number.isNaN(nEdad) || nEdad < 0 || nEdad > 120) {
+      alert("La edad debe estar entre 0 y 120 años.");
+      return;
+    }
+    const diag = (diagnostico || "").trim();
+    if (!diag) {
+      alert("El diagnóstico es obligatorio.");
+      return;
+    }
     setSaving(true);
     try {
       const q = query(
@@ -52,7 +73,7 @@ export default function PatientForm({ onClose, onCreated }) {
       const finEstimadoDate = form.finEstimado
         ? new Date(`${form.finEstimado}T00:00:00`)
         : null;
-      await addDoc(collection(db, "patients"), {
+      const nuevoPaciente = {
         nombreCompleto: form.nombreCompleto.trim(),
         cedula: String(form.cedula).trim(),
         status: "pendiente",
@@ -65,7 +86,10 @@ export default function PatientForm({ onClose, onCreated }) {
         finAt: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      });
+        edad: nEdad,
+        diagnostico: diag,
+      };
+      await addDoc(collection(db, "patients"), nuevoPaciente);
       onCreated && onCreated();
       onClose && onClose();
     } catch (err) {
@@ -116,6 +140,30 @@ export default function PatientForm({ onClose, onCreated }) {
             onChange={change}
             required
             style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}
+          />
+        </label>
+
+        <label style={{ display: "block", marginBottom: 8 }}>
+          Edad
+          <input
+            type="number"
+            min={0}
+            max={120}
+            value={edad}
+            onChange={(e) => setEdad(e.target.value)}
+            style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}
+            placeholder="Ej: 54"
+          />
+        </label>
+
+        <label style={{ display: "block", marginBottom: 8 }}>
+          Diagnóstico
+          <textarea
+            rows={2}
+            value={diagnostico}
+            onChange={(e) => setDiagnostico(e.target.value)}
+            style={{ display: "block", width: "100%", marginTop: 4, padding: 8 }}
+            placeholder="Ej: Neumonía adquirida en la comunidad"
           />
         </label>
 
