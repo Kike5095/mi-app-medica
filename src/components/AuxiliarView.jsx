@@ -16,7 +16,7 @@ import { db } from "../firebaseConfig";
 import VitalCharts from "./VitalCharts";
 import LogoutButton from "./LogoutButton";
 import RoleSwitcher from "./RoleSwitcher";
-import { parseBP } from "../utils/bp";
+import { parseBP as parseBPRaw } from "../utils/bp";
 import { finDisplay } from "../utils/dates";
 import { isAdmin as _isAdmin, assertAdmin as _assertAdmin } from "../utils/roles";
 import { isSuperAdminLocal } from "../lib/users";
@@ -46,6 +46,24 @@ export default function AuxiliarView() {
   const [spo2, setSpo2] = useState("");
   const [temp, setTemp] = useState("");
   const [nota, setNota] = useState("");
+  const [errors, setErrors] = useState({});
+  const fcRef = useRef(null);
+  const frRef = useRef(null);
+  const paRef = useRef(null);
+  const spo2Ref = useRef(null);
+  const tempRef = useRef(null);
+
+  const num = (v) => Number(String(v).replace(",", ".").trim());
+  function parseBP(raw) {
+    const s = String(raw || "").trim().replace(/[ _.-]/g, "/");
+    const [sysStr, diaStr] = s.split("/").map((x) => x?.trim());
+    const sys = parseInt(sysStr, 10);
+    const dia = parseInt(diaStr, 10);
+    if (!Number.isFinite(sys) || !Number.isFinite(dia)) return null;
+    if (sys <= dia) return null;
+    if (sys < 60 || sys > 260 || dia < 30 || dia > 150) return null;
+    return { sys, dia, ta: `${sys}/${dia}` };
+  }
 
   // Si llegas desde el médico copiando una cédula al clipboard, intenta pegarla auto (opcional)
   useEffect(() => {
@@ -67,7 +85,7 @@ export default function AuxiliarView() {
     let sys = r.paSys ?? r.bpSys;
     let dia = r.paDia ?? r.bpDia;
     if ((sys == null || dia == null) && r.bp) {
-      const parsed = parseBP(r.bp);
+      const parsed = parseBPRaw(r.bp);
       if (parsed) {
         sys = parsed.sys;
         dia = parsed.dia;
@@ -146,16 +164,6 @@ export default function AuxiliarView() {
     return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}`;
   }
 
-  function parsePA(input = "") {
-    const parts = String(input).replace(/[^\d]/g, " ").trim().split(/\s+/);
-    if (parts.length >= 2) {
-      const [s, d] = parts
-        .map((x) => parseInt(x, 10))
-        .filter(Number.isFinite);
-      if (s > 0 && d > 0) return { paSys: s, paDia: d };
-    }
-    return { paSys: null, paDia: null };
-  }
 
   const resetForm = () => {
     setFc("");
@@ -164,30 +172,62 @@ export default function AuxiliarView() {
     setSpo2("");
     setTemp("");
     setNota("");
+    setErrors({});
+    fcRef.current?.focus();
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!paciente) return;
-    const now = new Date();
+    if (!paciente || saving) return;
     setSaving(true);
+    setErrors({});
+
+    const now = new Date();
+    const fcVal = num(fc);
+    const frVal = num(fr);
+    const tempVal = num(temp);
+    const spo2Val = num(spo2);
+    const bp = parseBP(ta);
+
+    const newErrors = {};
+    if (!Number.isFinite(fcVal) || fcVal < 20 || fcVal > 220)
+      newErrors.fc = "Ingrese FC válida (20–220).";
+    if (!Number.isFinite(frVal) || frVal < 5 || frVal > 60)
+      newErrors.fr = "Ingrese FR válida (5–60).";
+    if (!bp) newErrors.pa = "Ingrese TA válida (p.ej., 120/80).";
+    if (!Number.isFinite(spo2Val) || spo2Val < 50 || spo2Val > 100)
+      newErrors.spo2 = "Ingrese SpO₂ válida (50–100).";
+    if (!Number.isFinite(tempVal) || tempVal < 30 || tempVal > 45)
+      newErrors.temp = "Ingrese Temp válida (30–45).";
+
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors);
+      setSaving(false);
+      const first = ["fc", "fr", "pa", "spo2", "temp"].find((f) => newErrors[f]);
+      if (first === "fc") fcRef.current?.focus();
+      else if (first === "fr") frRef.current?.focus();
+      else if (first === "pa") paRef.current?.focus();
+      else if (first === "spo2") spo2Ref.current?.focus();
+      else if (first === "temp") tempRef.current?.focus();
+      return;
+    }
+
     try {
       const patientRef = doc(db, "patients", paciente.id);
       const vitalsRef = collection(patientRef, "vitals");
-
       const q = query(vitalsRef, orderBy("createdAt", "desc"), limit(1));
       const snap = await getDocs(q);
       const last = snap.docs[0]?.data();
       const lastMs = last?.createdAt?.toMillis?.() ?? 0;
 
-      const { paSys, paDia } = parsePA(ta);
       const payload = {
-        temp: Number(temp) || null,
-        fc: Number(fc) || null,
-        fr: Number(fr) || null,
-        spo2: Number(spo2) || null,
-        paSys,
-        paDia,
+        fc: fcVal,
+        fr: frVal,
+        paSys: bp.sys,
+        paDia: bp.dia,
+        ta: bp.ta,
+        spo2: spo2Val,
+        temp: tempVal,
         note: (nota || "").trim(),
         createdAt: serverTimestamp(),
         clientAt: now.toISOString(),
@@ -206,14 +246,17 @@ export default function AuxiliarView() {
 
       if (isSameAsLast) {
         alert("Ya existe un registro muy reciente con los mismos datos.");
+        setSaving(false);
         return;
       }
 
       const docRef = doc(vitalsRef, minuteKey(now));
       await setDoc(docRef, payload, { merge: false });
-
       resetForm();
-      alert("Signos guardados.");
+      alert("Signos registrados");
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar los signos");
     } finally {
       setSaving(false);
     }
@@ -292,35 +335,70 @@ export default function AuxiliarView() {
                     <h2>Nuevo registro de signos</h2>
                     <form style={{ display: "grid", gap: 8, maxWidth: 600 }}>
                       <input
+                        ref={fcRef}
                         className="input"
                         placeholder="Frecuencia cardiaca (lpm)"
                         value={fc}
                         onChange={(e) => setFc(e.target.value)}
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                       />
+                      {errors.fc && (
+                        <p style={{ color: "crimson", fontSize: "0.8em" }}>{errors.fc}</p>
+                      )}
                       <input
+                        ref={frRef}
                         className="input"
                         placeholder="Frecuencia respiratoria (rpm)"
                         value={fr}
                         onChange={(e) => setFr(e.target.value)}
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                       />
+                      {errors.fr && (
+                        <p style={{ color: "crimson", fontSize: "0.8em" }}>{errors.fr}</p>
+                      )}
                       <input
+                        ref={paRef}
                         className="input"
                         placeholder="Tensión arterial (mmHg, ej: 120/80)"
                         value={ta}
                         onChange={(e) => setTa(e.target.value)}
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9/._ -]*"
                       />
+                      {errors.pa && (
+                        <p style={{ color: "crimson", fontSize: "0.8em" }}>{errors.pa}</p>
+                      )}
                       <input
+                        ref={spo2Ref}
                         className="input"
                         placeholder="Saturación O₂ (%)"
                         value={spo2}
                         onChange={(e) => setSpo2(e.target.value)}
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                       />
+                      {errors.spo2 && (
+                        <p style={{ color: "crimson", fontSize: "0.8em" }}>{errors.spo2}</p>
+                      )}
                       <input
+                        ref={tempRef}
                         className="input"
                         placeholder="Temperatura (°C)"
                         value={temp}
                         onChange={(e) => setTemp(e.target.value)}
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9.,]*"
                       />
+                      {errors.temp && (
+                        <p style={{ color: "crimson", fontSize: "0.8em" }}>{errors.temp}</p>
+                      )}
                       <textarea
                         className="textarea"
                         placeholder="Nota de enfermería"
