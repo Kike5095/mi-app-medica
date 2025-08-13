@@ -37,7 +37,7 @@ export default function AuxiliarView() {
   const [info, setInfo] = useState("");
   const [chartData, setChartData] = useState([]);
   const vitalsUnsub = useRef(null);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // formulario signos
   const [fc, setFc] = useState("");
@@ -55,6 +55,78 @@ export default function AuxiliarView() {
   const tempRef = useRef(null);
 
   const num = (v) => Number(String(v).replace(",", ".").trim());
+
+  const handleFcChange = (e) => {
+    const v = e.target.value;
+    setFc(v);
+    setErrors((prev) => {
+      const { fc, ...rest } = prev;
+      const n = num(v);
+      if (!Number.isInteger(n) || n < 30 || n > 220) {
+        return { ...rest, fc: "Ingrese FC válida (30–220)." };
+      }
+      return rest;
+    });
+  };
+
+  const handleFrChange = (e) => {
+    const v = e.target.value;
+    setFr(v);
+    setErrors((prev) => {
+      const { fr, ...rest } = prev;
+      const n = num(v);
+      if (!Number.isInteger(n) || n < 5 || n > 60) {
+        return { ...rest, fr: "Ingrese FR válida (5–60)." };
+      }
+      return rest;
+    });
+  };
+
+  const handlePaSysChange = (e) => {
+    const v = e.target.value;
+    setPaSys(v);
+    setErrors((prev) => {
+      const { pa, ...rest } = prev;
+      const err = validatePa(v, paDia);
+      return err ? { ...rest, pa: err } : rest;
+    });
+  };
+
+  const handlePaDiaChange = (e) => {
+    const v = e.target.value;
+    setPaDia(v);
+    setErrors((prev) => {
+      const { pa, ...rest } = prev;
+      const err = validatePa(paSys, v);
+      return err ? { ...rest, pa: err } : rest;
+    });
+  };
+
+  const handleSpo2Change = (e) => {
+    const v = e.target.value;
+    setSpo2(v);
+    setErrors((prev) => {
+      const { spo2, ...rest } = prev;
+      const n = num(v);
+      if (!Number.isInteger(n) || n < 50 || n > 100) {
+        return { ...rest, spo2: "Ingrese SpO₂ válida (50–100)." };
+      }
+      return rest;
+    });
+  };
+
+  const handleTempChange = (e) => {
+    const v = e.target.value;
+    setTemp(v);
+    setErrors((prev) => {
+      const { temp, ...rest } = prev;
+      const n = num(v);
+      if (!Number.isFinite(n) || n < 30 || n > 45) {
+        return { ...rest, temp: "Ingrese Temp válida (30–45)." };
+      }
+      return rest;
+    });
+  };
 
   // Si llegas desde el médico copiando una cédula al clipboard, intenta pegarla auto (opcional)
   useEffect(() => {
@@ -168,10 +240,27 @@ export default function AuxiliarView() {
     fcRef.current?.focus();
   };
 
+  const validatePa = (s, d) => {
+    const sysVal = parseInt(s, 10);
+    const diaVal = parseInt(d, 10);
+    if (
+      !Number.isInteger(sysVal) ||
+      !Number.isInteger(diaVal) ||
+      sysVal < 70 ||
+      sysVal > 260 ||
+      diaVal < 40 ||
+      diaVal > 160 ||
+      sysVal <= diaVal
+    ) {
+      return "Ingrese TA válida (sistólica 70–260, diastólica 40–160 y sistólica mayor que diastólica).";
+    }
+    return null;
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!paciente || saving) return;
-    setSaving(true);
+    if (!paciente || loading) return;
+    setLoading(true);
     setErrors({});
 
     const now = new Date();
@@ -184,20 +273,20 @@ export default function AuxiliarView() {
     const taString = Number.isFinite(sys) && Number.isFinite(dia) ? `${sys}/${dia}` : "";
 
     const newErrors = {};
-    if (!Number.isFinite(fcVal) || fcVal < 20 || fcVal > 220)
-      newErrors.fc = "Ingrese FC válida (20–220).";
-    if (!Number.isFinite(frVal) || frVal < 5 || frVal > 60)
+    if (!Number.isInteger(fcVal) || fcVal < 30 || fcVal > 220)
+      newErrors.fc = "Ingrese FC válida (30–220).";
+    if (!Number.isInteger(frVal) || frVal < 5 || frVal > 60)
       newErrors.fr = "Ingrese FR válida (5–60).";
-    if (!Number.isFinite(sys) || !Number.isFinite(dia))
-      newErrors.pa = "Ingrese TA válida.";
-    if (!Number.isFinite(spo2Val) || spo2Val < 50 || spo2Val > 100)
+    const paError = validatePa(paSys, paDia);
+    if (paError) newErrors.pa = paError;
+    if (!Number.isInteger(spo2Val) || spo2Val < 50 || spo2Val > 100)
       newErrors.spo2 = "Ingrese SpO₂ válida (50–100).";
     if (!Number.isFinite(tempVal) || tempVal < 30 || tempVal > 45)
       newErrors.temp = "Ingrese Temp válida (30–45).";
 
     if (Object.keys(newErrors).length) {
       setErrors(newErrors);
-      setSaving(false);
+      setLoading(false);
       const first = ["fc", "fr", "pa", "spo2", "temp"].find((f) => newErrors[f]);
       if (first === "fc") fcRef.current?.focus();
       else if (first === "fr") frRef.current?.focus();
@@ -241,7 +330,7 @@ export default function AuxiliarView() {
 
       if (isSameAsLast) {
         alert("Ya existe un registro muy reciente con los mismos datos.");
-        setSaving(false);
+        setLoading(false);
         return;
       }
 
@@ -253,7 +342,7 @@ export default function AuxiliarView() {
       console.error(err);
       alert("Error al guardar los signos");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
@@ -334,7 +423,7 @@ export default function AuxiliarView() {
                         className="input"
                         placeholder="Frecuencia cardiaca (lpm)"
                         value={fc}
-                        onChange={(e) => setFc(e.target.value)}
+                        onChange={handleFcChange}
                         required
                         inputMode="numeric"
                         pattern="[0-9]*"
@@ -347,7 +436,7 @@ export default function AuxiliarView() {
                         className="input"
                         placeholder="Frecuencia respiratoria (rpm)"
                         value={fr}
-                        onChange={(e) => setFr(e.target.value)}
+                        onChange={handleFrChange}
                         required
                         inputMode="numeric"
                         pattern="[0-9]*"
@@ -366,9 +455,10 @@ export default function AuxiliarView() {
                             pattern="[0-9]*"
                             placeholder="Sistólica (ej: 120)"
                             value={paSys}
-                            onChange={e => setPaSys(e.target.value)}
+                            onChange={handlePaSysChange}
                             className="input"
                             ref={paRef}
+                            required
                           />
                           <span style={{opacity:0.6}}>/</span>
                           <input
@@ -377,8 +467,9 @@ export default function AuxiliarView() {
                             pattern="[0-9]*"
                             placeholder="Diastólica (ej: 80)"
                             value={paDia}
-                            onChange={e => setPaDia(e.target.value)}
+                            onChange={handlePaDiaChange}
                             className="input"
+                            required
                           />
                         </div>
                       </div>
@@ -390,7 +481,7 @@ export default function AuxiliarView() {
                         className="input"
                         placeholder="Saturación O₂ (%)"
                         value={spo2}
-                        onChange={(e) => setSpo2(e.target.value)}
+                        onChange={handleSpo2Change}
                         required
                         inputMode="numeric"
                         pattern="[0-9]*"
@@ -403,7 +494,7 @@ export default function AuxiliarView() {
                         className="input"
                         placeholder="Temperatura (°C)"
                         value={temp}
-                        onChange={(e) => setTemp(e.target.value)}
+                        onChange={handleTempChange}
                         required
                         inputMode="numeric"
                         pattern="[0-9.,]*"
@@ -421,9 +512,19 @@ export default function AuxiliarView() {
                         type="button"
                         className="btn primary"
                         onClick={handleSave}
-                        disabled={saving || !paciente}
+                        disabled={
+                          loading ||
+                          !paciente ||
+                          Object.keys(errors).length > 0 ||
+                          !fc ||
+                          !fr ||
+                          !paSys ||
+                          !paDia ||
+                          !spo2 ||
+                          !temp
+                        }
                       >
-                        {saving ? "Guardando…" : "Registrar signos"}
+                        {loading ? "Guardando…" : "Registrar signos"}
                       </button>
                     </form>
                   </>
