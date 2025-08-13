@@ -42,7 +42,8 @@ export default function AuxiliarView() {
   // formulario signos
   const [fc, setFc] = useState("");
   const [fr, setFr] = useState("");
-  const [ta, setTa] = useState("");    // "120/80"
+  const [paSys, setPaSys] = useState("");
+  const [paDia, setPaDia] = useState("");
   const [spo2, setSpo2] = useState("");
   const [temp, setTemp] = useState("");
   const [nota, setNota] = useState("");
@@ -54,16 +55,6 @@ export default function AuxiliarView() {
   const tempRef = useRef(null);
 
   const num = (v) => Number(String(v).replace(",", ".").trim());
-  function parseBP(raw) {
-    const s = String(raw || "").trim().replace(/[ _.-]/g, "/");
-    const [sysStr, diaStr] = s.split("/").map((x) => x?.trim());
-    const sys = parseInt(sysStr, 10);
-    const dia = parseInt(diaStr, 10);
-    if (!Number.isFinite(sys) || !Number.isFinite(dia)) return null;
-    if (sys <= dia) return null;
-    if (sys < 60 || sys > 260 || dia < 30 || dia > 150) return null;
-    return { sys, dia, ta: `${sys}/${dia}` };
-  }
 
   // Si llegas desde el médico copiando una cédula al clipboard, intenta pegarla auto (opcional)
   useEffect(() => {
@@ -168,7 +159,8 @@ export default function AuxiliarView() {
   const resetForm = () => {
     setFc("");
     setFr("");
-    setTa("");
+    setPaSys("");
+    setPaDia("");
     setSpo2("");
     setTemp("");
     setNota("");
@@ -187,14 +179,17 @@ export default function AuxiliarView() {
     const frVal = num(fr);
     const tempVal = num(temp);
     const spo2Val = num(spo2);
-    const bp = parseBP(ta);
+    const sys = parseInt(paSys, 10);
+    const dia = parseInt(paDia, 10);
+    const taString = Number.isFinite(sys) && Number.isFinite(dia) ? `${sys}/${dia}` : "";
 
     const newErrors = {};
     if (!Number.isFinite(fcVal) || fcVal < 20 || fcVal > 220)
       newErrors.fc = "Ingrese FC válida (20–220).";
     if (!Number.isFinite(frVal) || frVal < 5 || frVal > 60)
       newErrors.fr = "Ingrese FR válida (5–60).";
-    if (!bp) newErrors.pa = "Ingrese TA válida (p.ej., 120/80).";
+    if (!Number.isFinite(sys) || !Number.isFinite(dia))
+      newErrors.pa = "Ingrese TA válida.";
     if (!Number.isFinite(spo2Val) || spo2Val < 50 || spo2Val > 100)
       newErrors.spo2 = "Ingrese SpO₂ válida (50–100).";
     if (!Number.isFinite(tempVal) || tempVal < 30 || tempVal > 45)
@@ -223,9 +218,9 @@ export default function AuxiliarView() {
       const payload = {
         fc: fcVal,
         fr: frVal,
-        paSys: bp.sys,
-        paDia: bp.dia,
-        ta: bp.ta,
+        paSys: Number.isFinite(sys) ? sys : null,
+        paDia: Number.isFinite(dia) ? dia : null,
+        ta: taString,
         spo2: spo2Val,
         temp: tempVal,
         note: (nota || "").trim(),
@@ -360,16 +355,33 @@ export default function AuxiliarView() {
                       {errors.fr && (
                         <p style={{ color: "crimson", fontSize: "0.8em" }}>{errors.fr}</p>
                       )}
-                      <input
-                        ref={paRef}
-                        className="input"
-                        placeholder="Tensión arterial (mmHg, ej: 120/80)"
-                        value={ta}
-                        onChange={(e) => setTa(e.target.value)}
-                        required
-                        inputMode="numeric"
-                        pattern="[0-9/._ -]*"
-                      />
+                      <div className="field">
+                        <label style={{display:"block", fontWeight:600, marginBottom:6}}>
+                          Tensión arterial (mmHg)
+                        </label>
+                        <div style={{display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center"}}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="Sistólica (ej: 120)"
+                            value={paSys}
+                            onChange={e => setPaSys(e.target.value)}
+                            className="input"
+                            ref={paRef}
+                          />
+                          <span style={{opacity:0.6}}>/</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="Diastólica (ej: 80)"
+                            value={paDia}
+                            onChange={e => setPaDia(e.target.value)}
+                            className="input"
+                          />
+                        </div>
+                      </div>
                       {errors.pa && (
                         <p style={{ color: "crimson", fontSize: "0.8em" }}>{errors.pa}</p>
                       )}
