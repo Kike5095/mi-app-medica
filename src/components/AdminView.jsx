@@ -91,8 +91,8 @@ export default function AdminView() {
       const isEstimado = !!p.finEstimadoAt && !p.finAt;
       return (
         <tr key={p.id}>
-          <td>{formatName(p)}</td>
-          <td>{p.cedula || "—"}</td>
+          <td><span className="no-detect">{formatName(p)}</span></td>
+          <td><span className="no-detect">{p.cedula || "—"}</span></td>
           <td>{showVal(p.edad)}</td>
           <td title={p.diagnostico || ""}>{truncate(p.diagnostico, 30)}</td>
           <td>{ingreso}</td>

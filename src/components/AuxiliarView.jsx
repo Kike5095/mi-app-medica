@@ -394,14 +394,17 @@ export default function AuxiliarView() {
                   <>
                     <h2>Paciente</h2>
                     <p>
-                      <b>Nombre:</b>{" "}
-                      {(
-                        paciente.nombreCompleto ||
-                        `${paciente.firstName || ""} ${paciente.lastName || ""}`.trim()
-                      ) || ""}
+                      <strong>Nombre:</strong>{" "}
+                      <span className="no-detect">
+                        {(
+                          paciente.nombreCompleto ||
+                          `${paciente.firstName || ""} ${paciente.lastName || ""}`.trim()
+                        ) || "—"}
+                      </span>
                     </p>
                     <p>
-                      <b>Cédula:</b> {paciente.cedula}
+                      <strong>Cédula:</strong>{" "}
+                      <span className="no-detect">{paciente.cedula || "—"}</span>
                     </p>
                     <p>
                       <b>Estado:</b> {paciente.status || paciente.estado || "-"}

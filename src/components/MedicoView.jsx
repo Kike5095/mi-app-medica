@@ -133,8 +133,8 @@ export default function MedicoView() {
                         : "—";
                       return (
                         <tr key={p.id}>
-                          <td>{nombre}</td>
-                          <td>{ced}</td>
+                          <td><span className="no-detect">{nombre}</span></td>
+                          <td><span className="no-detect">{ced}</span></td>
                           <td>{edadTxt}</td>
                           <td title={p.diagnostico || ""}>{dxTxt}</td>
                           <td>{ingresoDisplay(p)}</td>
@@ -202,8 +202,8 @@ export default function MedicoView() {
                         : "—";
                       return (
                         <tr key={p.id}>
-                          <td>{nombre}</td>
-                          <td>{ced}</td>
+                          <td><span className="no-detect">{nombre}</span></td>
+                          <td><span className="no-detect">{ced}</span></td>
                           <td>{edadTxt}</td>
                           <td title={p.diagnostico || ""}>{dxTxt}</td>
                           <td>{ingresoDisplay(p)}</td>
