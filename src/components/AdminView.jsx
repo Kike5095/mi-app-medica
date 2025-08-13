@@ -166,7 +166,12 @@ export default function AdminView() {
       <div className="container">
         <div className="section-header">
           <h1 className="section-title">Pacientes</h1>
-          <LogoutButton />
+          <div style={{ display: "flex", gap: 8 }}>
+            {isAdmin() && (
+              <button className="btn" onClick={() => navigate("/usuarios")}>Usuarios</button>
+            )}
+            <LogoutButton />
+          </div>
         </div>
 
         <button className="btn primary" onClick={() => setCreating(true)}>

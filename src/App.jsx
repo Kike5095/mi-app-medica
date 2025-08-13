@@ -9,6 +9,8 @@ import AdminView from "./components/AdminView.jsx";
 import PatientDetail from "./components/PatientDetail.jsx";
 import SuperNav from "./components/SuperNav.jsx";
 import RoleRoute from "./components/RoleRoute.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import UsersAdmin from "./components/UsersAdmin.jsx";
 
 export default function App() {
   // Lee el rol desde localStorage pero en estado, para que re-renderice
@@ -62,6 +64,14 @@ export default function App() {
             <RoleRoute allow={["admin", "superadmin"]}>
               <AdminView />
             </RoleRoute>
+          }
+        />
+        <Route
+          path="/usuarios"
+          element={
+            <ProtectedRoute role="admin">
+              <UsersAdmin />
+            </ProtectedRoute>
           }
         />
 
