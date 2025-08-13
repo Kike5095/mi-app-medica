@@ -7,6 +7,7 @@ export default function LogoutButton({ children = "Salir", style }) {
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
     localStorage.removeItem("userName");
+    localStorage.removeItem("viewAs");
     navigate("/");
   };
   return (

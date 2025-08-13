@@ -84,3 +84,16 @@ export function getRole() {
 export function isSuperAdminLocal() {
   return getRole() === "superadmin";
 }
+
+export function isCedulaInSuperAdmins(cedula) {
+  try {
+    const raw = import.meta.env?.VITE_SUPER_ADMINS || "";
+    const list = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return list.includes(String(cedula));
+  } catch {
+    return false;
+  }
+}
