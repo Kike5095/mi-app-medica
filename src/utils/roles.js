@@ -7,7 +7,8 @@ export function getRole() {
 }
 
 export function isAdmin() {
-  return getRole() === "admin";
+  const r = getRole();
+  return r === "admin" || r === "superadmin";
 }
 
 export function assertAdmin() {

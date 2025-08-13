@@ -72,3 +72,15 @@ export async function findUserByCedula(cedula) {
   if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data() };
 }
+
+export function getRole() {
+  try {
+    return localStorage.getItem("role") || "";
+  } catch {
+    return "";
+  }
+}
+
+export function isSuperAdminLocal() {
+  return getRole() === "superadmin";
+}

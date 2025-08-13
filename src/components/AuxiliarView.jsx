@@ -14,9 +14,11 @@ import {
 import { db } from "../firebaseConfig";
 import VitalCharts from "./VitalCharts";
 import LogoutButton from "./LogoutButton";
+import RoleSwitcher from "./RoleSwitcher";
 import { parseBP } from "../utils/bp";
 import { finDisplay } from "../utils/dates";
 import { isAdmin as _isAdmin, assertAdmin as _assertAdmin } from "../utils/roles";
+import { isSuperAdminLocal } from "../lib/users";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";
@@ -201,7 +203,10 @@ export default function AuxiliarView() {
       <div className="container">
         <div className="section-header">
           <h1 className="section-title">Auxiliar – Registro de signos</h1>
-          <LogoutButton />
+          <div style={{ display: "flex", gap: 8 }}>
+            <LogoutButton />
+            {isSuperAdminLocal() && <RoleSwitcher />}
+          </div>
         </div>
 
         <div className="twocol">

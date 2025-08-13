@@ -10,7 +10,9 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import LogoutButton from "./LogoutButton";
+import RoleSwitcher from "./RoleSwitcher";
 import { asDate, ingresoDisplay, finDisplay } from "../utils/dates";
+import { isSuperAdminLocal } from "../lib/users";
 
 export default function MedicoView() {
   const nav = useNavigate();
@@ -72,7 +74,10 @@ export default function MedicoView() {
       <div className="container">
         <div className="section-header">
           <h1 className="section-title">Pacientes</h1>
-          <LogoutButton />
+          <div style={{ display: "flex", gap: 8 }}>
+            <LogoutButton />
+            {isSuperAdminLocal() && <RoleSwitcher />}
+          </div>
         </div>
 
         <section>
