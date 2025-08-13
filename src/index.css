@@ -169,3 +169,24 @@ input, textarea, button { font: inherit; }
   margin-bottom: 12px;
 }
 
+a[x-apple-data-detectors]{
+  color:inherit !important;
+  text-decoration:none !important;
+  pointer-events:none !important;
+  cursor:default !important;
+}
+a[href^="tel:"],
+a[href^="mailto:"],
+a[href^="maps:"],
+a[href^="http://maps.apple.com"],
+a[href^="https://maps.apple.com"]{
+  color:inherit !important;
+  text-decoration:none !important;
+  pointer-events:none !important;
+  cursor:default !important;
+}
+/* Clase para texto que no debe “detectarse” en iOS */
+.no-detect{
+  -webkit-touch-callout:none;
+}
+
