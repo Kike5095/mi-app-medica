@@ -11,8 +11,10 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import PatientForm from "./PatientForm";
 import LogoutButton from "./LogoutButton";
+import RoleSwitcher from "./RoleSwitcher";
 import { ingresoDisplay, finDisplay } from "../utils/dates";
 import { isAdmin } from "../utils/roles";
+import { isSuperAdminLocal } from "../lib/users";
 
 function formatName(p) {
   const name = (p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim();
@@ -171,6 +173,7 @@ export default function AdminView() {
               <button className="btn" onClick={() => navigate("/usuarios")}>Usuarios</button>
             )}
             <LogoutButton />
+            {isSuperAdminLocal() && <RoleSwitcher />}
           </div>
         </div>
 

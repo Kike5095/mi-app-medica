@@ -4,7 +4,10 @@ import {
   getUsersPage,
   findUserByCedula,
   updateUserRole,
+  isSuperAdminLocal,
 } from "../lib/users";
+import LogoutButton from "./LogoutButton";
+import RoleSwitcher from "./RoleSwitcher";
 
 export default function UsersAdmin() {
   const [users, setUsers] = useState([]);
@@ -85,7 +88,7 @@ export default function UsersAdmin() {
       <div className="container">
         <div className="section-header" style={{ gap: 8 }}>
           <h1 className="section-title">Usuarios</h1>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input
               placeholder="Cédula"
               value={cedula}
@@ -94,6 +97,8 @@ export default function UsersAdmin() {
             <button className="btn" onClick={buscar}>
               Buscar
             </button>
+            <LogoutButton />
+            {isSuperAdminLocal() && <RoleSwitcher />}
           </div>
         </div>
 

@@ -20,9 +20,11 @@ export default function LoginByCedula() {
         localStorage.setItem("role", user.role || "");
         localStorage.setItem("userId", user.cedula);
         localStorage.setItem("userName", user.nombreCompleto || "");
-        if (user.role === "admin") nav("/admin");
-        else if (user.role === "medico") nav("/medico");
-        else if (user.role === "auxiliar") nav("/auxiliar");
+        const r = user.role;
+        localStorage.setItem("viewAs", r === "superadmin" ? "admin" : r);
+        if (r === "admin" || r === "superadmin") nav("/admin");
+        else if (r === "medico") nav("/medico");
+        else if (r === "auxiliar") nav("/auxiliar");
         else nav("/");
       } else {
         nav(`/registro?cedula=${encodeURIComponent(ced)}`);
