@@ -8,6 +8,7 @@ import AuxiliarView from "./components/AuxiliarView.jsx";
 import AdminView from "./components/AdminView.jsx";
 import PatientDetail from "./components/PatientDetail.jsx";
 import SuperNav from "./components/SuperNav.jsx";
+import RoleRoute from "./components/RoleRoute.jsx";
 
 export default function App() {
   // Lee el rol desde localStorage pero en estado, para que re-renderice
@@ -37,11 +38,32 @@ export default function App() {
         <Route path="/" element={<LoginByCedula />} />
         <Route path="/registro" element={<UserRegister />} />
 
-        {/* dejamos rutas SIEMPRE disponibles (más simple p/ superadmin) */}
-        <Route path="/medico" element={<MedicoView />} />
+        {/* rutas protegidas por rol */}
+        <Route
+          path="/medico"
+          element={
+            <RoleRoute allow={["medico", "superadmin"]}>
+              <MedicoView />
+            </RoleRoute>
+          }
+        />
         <Route path="/paciente/:id" element={<PatientDetail />} />
-        <Route path="/auxiliar" element={<AuxiliarView />} />
-        <Route path="/admin" element={<AdminView />} />
+        <Route
+          path="/auxiliar"
+          element={
+            <RoleRoute allow={["auxiliar", "superadmin"]}>
+              <AuxiliarView />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <RoleRoute allow={["admin", "superadmin"]}>
+              <AdminView />
+            </RoleRoute>
+          }
+        />
 
         {/* catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
