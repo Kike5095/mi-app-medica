@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 export default function SuperNav() {
   const nav = useNavigate();
   const { pathname } = useLocation();
+  const name = localStorage.getItem("userName");
 
   const Btn = ({ to, children }) => (
     <button
@@ -32,6 +33,7 @@ export default function SuperNav() {
       marginBottom: 8
     }}>
       <b>Super Admin:</b>{" "}
+      {name && <span style={{ marginRight: 8 }}>{name}</span>}
       <Btn to="/admin">Admin</Btn>
       <Btn to="/medico">Médico</Btn>
       <Btn to="/auxiliar">Auxiliar</Btn>
