@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUserByCedula } from "../lib/users";
+import { getUserByCedula, isCedulaInSuperAdmins } from "../lib/users";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebaseConfig";
 
 const normCed = (s) => (s || "").toString().trim().replace(/[.\s-]/g, "");
 
@@ -16,6 +18,23 @@ export default function LoginByCedula() {
     setBuscando(true);
     try {
       const user = await getUserByCedula(ced);
+      if (isCedulaInSuperAdmins(ced)) {
+        localStorage.setItem("role", "superadmin");
+        localStorage.setItem("userId", ced);
+        localStorage.setItem("userName", user?.nombreCompleto || "");
+        try {
+          if (user?.role !== "superadmin") {
+            await updateDoc(doc(db, "users", ced), {
+              role: "superadmin",
+              updatedAt: serverTimestamp(),
+            });
+          }
+        } catch (e) {
+          /* no-op */
+        }
+        nav("/admin");
+        return;
+      }
       if (user) {
         localStorage.setItem("role", user.role || "");
         localStorage.setItem("userId", user.cedula);
