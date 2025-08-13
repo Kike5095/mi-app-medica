@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /patients/{patientId}/vitals/{vitalId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && validVital();
+      function validVital() {
+        return request.resource.data.keys().hasAll([
+            'fc','fr','paSys','paDia','spo2','temp','createdAt','clientAt'
+          ]) &&
+          request.resource.data.fc is int &&
+          request.resource.data.fr is int &&
+          request.resource.data.paSys is int &&
+          request.resource.data.paDia is int &&
+          request.resource.data.spo2 is int &&
+          request.resource.data.temp is number &&
+          request.resource.data.paSys > request.resource.data.paDia &&
+          request.resource.data.paSys >= 60 && request.resource.data.paSys <= 260 &&
+          request.resource.data.paDia >= 30 && request.resource.data.paDia <= 150 &&
+          request.resource.data.fc >= 20 && request.resource.data.fc <= 220 &&
+          request.resource.data.fr >= 5 && request.resource.data.fr <= 60 &&
+          request.resource.data.spo2 >= 50 && request.resource.data.spo2 <= 100 &&
+          request.resource.data.temp >= 30 && request.resource.data.temp <= 45;
+      }
+    }
+    match /vitals/{date}/{doc} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && validVital();
+      function validVital() {
+        return request.resource.data.keys().hasAll([
+            'fc','fr','paSys','paDia','spo2','temp','createdAt','clientAt'
+          ]) &&
+          request.resource.data.fc is int &&
+          request.resource.data.fr is int &&
+          request.resource.data.paSys is int &&
+          request.resource.data.paDia is int &&
+          request.resource.data.spo2 is int &&
+          request.resource.data.temp is number &&
+          request.resource.data.paSys > request.resource.data.paDia &&
+          request.resource.data.paSys >= 60 && request.resource.data.paSys <= 260 &&
+          request.resource.data.paDia >= 30 && request.resource.data.paDia <= 150 &&
+          request.resource.data.fc >= 20 && request.resource.data.fc <= 220 &&
+          request.resource.data.fr >= 5 && request.resource.data.fr <= 60 &&
+          request.resource.data.spo2 >= 50 && request.resource.data.spo2 <= 100 &&
+          request.resource.data.temp >= 30 && request.resource.data.temp <= 45;
+      }
+    }
+  }
+}
