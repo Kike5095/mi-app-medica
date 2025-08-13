@@ -21,17 +21,19 @@ function normalizeRows(data) {
     return Number.isFinite(n) ? n : null;
   };
 
-  return (data || []).map((r) => {
-    if (r.t instanceof Date) return r; // ya normalizado
+  return (data || [])
+    .map((r) => {
+      if (r.t instanceof Date) return r; // ya normalizado
 
-    let t = new Date();
-    const c = r.createdAt;
-    if (c?.toDate) t = c.toDate();
-    else if (c?.seconds) t = new Date(c.seconds * 1000);
-    else if (c instanceof Date) t = c;
+      let t = new Date();
+      const c = r.createdAt;
+      if (c?.toDate) t = c.toDate();
+      else if (c?.seconds) t = new Date(c.seconds * 1000);
+      else if (c instanceof Date) t = c;
+      else if (r.clientAt) t = new Date(r.clientAt);
 
-    let sys = r.sys ?? r.bpSys;
-    let dia = r.dia ?? r.bpDia;
+      let sys = r.sys ?? r.bpSys ?? r.paSys;
+      let dia = r.dia ?? r.bpDia ?? r.paDia;
     if ((sys == null || dia == null) && r.bp) {
       const parsed = parseBP(r.bp);
       if (parsed) {
@@ -39,17 +41,17 @@ function normalizeRows(data) {
         dia = parsed.dia;
       }
     }
-
-    return {
-      t,
-      hr: toNumber(r.hr ?? r.fc),
-      rr: toNumber(r.rr ?? r.fr),
-      temp: toNumber(r.temp),
-      spo2: toNumber(r.spo2),
-      sys: toNumber(sys),
-      dia: toNumber(dia),
-    };
-  });
+      return {
+        t,
+        hr: toNumber(r.hr ?? r.fc),
+        rr: toNumber(r.rr ?? r.fr),
+        temp: toNumber(r.temp),
+        spo2: toNumber(r.spo2),
+        sys: toNumber(sys),
+        dia: toNumber(dia),
+      };
+    })
+    .sort((a, b) => a.t - b.t);
 }
 
 function ChartCard({ children, data }) {

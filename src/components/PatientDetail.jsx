@@ -63,7 +63,17 @@ export default function PatientDetail() {
     const col = collection(db, `patients/${id}/vitals`);
     const q = query(col, orderBy("createdAt", "asc"));
     const unsub = onSnapshot(q, async (snap) => {
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const list = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta =
+            a.createdAt?.toMillis?.() ??
+            (a.clientAt ? new Date(a.clientAt).getTime() : 0);
+          const tb =
+            b.createdAt?.toMillis?.() ??
+            (b.clientAt ? new Date(b.clientAt).getTime() : 0);
+          return ta - tb;
+        });
       setVitals(list);
 
       if (list.length === 0 && patient) {
@@ -227,10 +237,16 @@ export default function PatientDetail() {
                     <tbody>
                       {vitals.map((v) => {
                         const bp =
-                          typeof v.bpSys === "number" && typeof v.bpDia === "number"
+                          typeof v.paSys === "number" && typeof v.paDia === "number"
+                            ? `${v.paSys}/${v.paDia}`
+                            : typeof v.bpSys === "number" && typeof v.bpDia === "number"
                             ? `${v.bpSys}/${v.bpDia}`
                             : parseBP(v.bp)?.text || "";
-                        const fecha = v.createdAt?.toDate?.()?.toLocaleString?.() || "";
+                        const fecha =
+                          v.createdAt?.toDate?.()?.toLocaleString?.() ||
+                          (v.clientAt
+                            ? new Date(v.clientAt).toLocaleString()
+                            : "");
                         const note = v.note ?? v.notes ?? "";
                         const preview = note.length > 80 ? note.slice(0, 80).trimEnd() + "…" : note;
                         return (

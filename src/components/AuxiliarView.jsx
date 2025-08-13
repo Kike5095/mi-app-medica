@@ -1,13 +1,14 @@
 // src/components/AuxiliarView.jsx
 import { useEffect, useRef, useState } from "react";
 import {
-  addDoc,
   collection,
+  doc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   where,
   limit,
 } from "firebase/firestore";
@@ -36,6 +37,7 @@ export default function AuxiliarView() {
   const [info, setInfo] = useState("");
   const [chartData, setChartData] = useState([]);
   const vitalsUnsub = useRef(null);
+  const [saving, setSaving] = useState(false);
 
   // formulario signos
   const [fc, setFc] = useState("");
@@ -55,15 +57,15 @@ export default function AuxiliarView() {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
     };
-
     let t = new Date();
     const c = r.createdAt;
     if (c?.toDate) t = c.toDate();
     else if (c?.seconds) t = new Date(c.seconds * 1000);
     else if (c instanceof Date) t = c;
+    else if (r.clientAt) t = new Date(r.clientAt);
 
-    let sys = r.bpSys;
-    let dia = r.bpDia;
+    let sys = r.paSys ?? r.bpSys;
+    let dia = r.paDia ?? r.bpDia;
     if ((sys == null || dia == null) && r.bp) {
       const parsed = parseBP(r.bp);
       if (parsed) {
@@ -91,7 +93,9 @@ export default function AuxiliarView() {
     const col = collection(db, "patients", patientId, "vitals");
     const q = query(col, orderBy("createdAt", "asc"));
     vitalsUnsub.current = onSnapshot(q, (snap) => {
-      const rows = snap.docs.map((d) => normalizeRecord(d.data()));
+      const rows = snap.docs
+        .map((d) => normalizeRecord(d.data()))
+        .sort((a, b) => a.t - b.t);
       setChartData(rows);
     });
   };
@@ -137,55 +141,81 @@ export default function AuxiliarView() {
     }
   };
 
-  const registrarSignos = async (e) => {
+  function minuteKey(d = new Date()) {
+    const p = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}`;
+  }
+
+  function parsePA(input = "") {
+    const parts = String(input).replace(/[^\d]/g, " ").trim().split(/\s+/);
+    if (parts.length >= 2) {
+      const [s, d] = parts
+        .map((x) => parseInt(x, 10))
+        .filter(Number.isFinite);
+      if (s > 0 && d > 0) return { paSys: s, paDia: d };
+    }
+    return { paSys: null, paDia: null };
+  }
+
+  const resetForm = () => {
+    setFc("");
+    setFr("");
+    setTa("");
+    setSpo2("");
+    setTemp("");
+    setNota("");
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!paciente) return;
+    const now = new Date();
+    setSaving(true);
+    try {
+      const patientRef = doc(db, "patients", paciente.id);
+      const vitalsRef = collection(patientRef, "vitals");
 
-    const toNumber = (v) => {
-      if (v === "") return undefined;
-      const n = Number(v);
-      return Number.isFinite(n) ? n : undefined;
-    };
+      const q = query(vitalsRef, orderBy("createdAt", "desc"), limit(1));
+      const snap = await getDocs(q);
+      const last = snap.docs[0]?.data();
+      const lastMs = last?.createdAt?.toMillis?.() ?? 0;
 
-    let parsedBP = null;
-    if (ta.trim()) {
-      parsedBP = parseBP(ta);
-      if (!parsedBP) {
-        setInfo("Formato de PA inválido. Ej: 120/80");
+      const { paSys, paDia } = parsePA(ta);
+      const payload = {
+        temp: Number(temp) || null,
+        fc: Number(fc) || null,
+        fr: Number(fr) || null,
+        spo2: Number(spo2) || null,
+        paSys,
+        paDia,
+        note: (nota || "").trim(),
+        createdAt: serverTimestamp(),
+        clientAt: now.toISOString(),
+      };
+
+      const isSameAsLast =
+        last &&
+        Math.abs(Date.now() - lastMs) < 20000 &&
+        (last.temp ?? null) === payload.temp &&
+        (last.fc ?? null) === payload.fc &&
+        (last.fr ?? null) === payload.fr &&
+        (last.spo2 ?? null) === payload.spo2 &&
+        (last.paSys ?? last.bpSys ?? null) === payload.paSys &&
+        (last.paDia ?? last.bpDia ?? null) === payload.paDia &&
+        (last.note ?? last.notes ?? "") === payload.note;
+
+      if (isSameAsLast) {
+        alert("Ya existe un registro muy reciente con los mismos datos.");
         return;
       }
-    }
 
-    try {
-      const vitalsCol = collection(db, "patients", paciente.id, "vitals");
-      const data = { createdAt: serverTimestamp() };
-      const hrN = toNumber(fc);
-      const rrN = toNumber(fr);
-      const tempN = toNumber(temp);
-      const spo2N = toNumber(spo2);
-      if (hrN !== undefined) data.hr = hrN;
-      if (rrN !== undefined) data.rr = rrN;
-      if (tempN !== undefined) data.temp = tempN;
-      if (spo2N !== undefined) data.spo2 = spo2N;
-      if (nota.trim()) data.notes = nota.trim();
-      if (parsedBP) {
-        data.bp = parsedBP.text;
-        data.bpSys = parsedBP.sys;
-        data.bpDia = parsedBP.dia;
-      }
-      await addDoc(vitalsCol, data);
+      const docRef = doc(vitalsRef, minuteKey(now));
+      await setDoc(docRef, payload, { merge: false });
 
-      // limpiar formulario
-      setFc("");
-      setFr("");
-      setTa("");
-      setSpo2("");
-      setTemp("");
-      setNota("");
-      setInfo("Signos registrados ✅");
-    } catch (e) {
-      console.error(e);
-      setInfo("No se pudo registrar. Revisa la conexión / permisos.");
+      resetForm();
+      alert("Signos guardados.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -260,10 +290,7 @@ export default function AuxiliarView() {
                     </p>
 
                     <h2>Nuevo registro de signos</h2>
-                    <form
-                      onSubmit={registrarSignos}
-                      style={{ display: "grid", gap: 8, maxWidth: 600 }}
-                    >
+                    <form style={{ display: "grid", gap: 8, maxWidth: 600 }}>
                       <input
                         className="input"
                         placeholder="Frecuencia cardiaca (lpm)"
@@ -300,7 +327,14 @@ export default function AuxiliarView() {
                         value={nota}
                         onChange={(e) => setNota(e.target.value)}
                       />
-                      <button className="btn primary">Registrar signos</button>
+                      <button
+                        type="button"
+                        className="btn primary"
+                        onClick={handleSave}
+                        disabled={saving || !paciente}
+                      >
+                        {saving ? "Guardando…" : "Registrar signos"}
+                      </button>
                     </form>
                   </>
                 )}
