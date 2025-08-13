@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserByCedula } from "../lib/users";
 
+const normCed = (s) => (s || "").toString().trim().replace(/[.\s-]/g, "");
+
 export default function LoginByCedula() {
   const [cedula, setCedula] = useState("");
   const [buscando, setBuscando] = useState(false);
@@ -9,11 +11,11 @@ export default function LoginByCedula() {
 
   const submit = async (e) => {
     e.preventDefault();
-    const valor = cedula.trim();
-    if (!valor) return;
+    const ced = normCed(cedula);
+    if (!ced) return;
     setBuscando(true);
     try {
-      const user = await getUserByCedula(valor);
+      const user = await getUserByCedula(ced);
       if (user) {
         localStorage.setItem("role", user.role || "");
         localStorage.setItem("userId", user.cedula);
@@ -23,7 +25,7 @@ export default function LoginByCedula() {
         else if (user.role === "auxiliar") nav("/auxiliar");
         else nav("/");
       } else {
-        nav(`/registro?cedula=${encodeURIComponent(valor)}`);
+        nav(`/registro?cedula=${encodeURIComponent(ced)}`);
       }
     } catch (err) {
       console.error(err);
@@ -42,9 +44,7 @@ export default function LoginByCedula() {
       <input
         placeholder="Cédula"
         value={cedula}
-        onChange={(e) =>
-          setCedula(e.target.value.replace(/[^0-9a-zA-Z]/g, ""))
-        }
+        onChange={(e) => setCedula(normCed(e.target.value))}
         style={{ display: "block", width: "100%", padding: 10, marginBottom: 12 }}
       />
       <button

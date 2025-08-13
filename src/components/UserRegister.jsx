@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { createUser } from "../lib/users";
+import { createUser, getUserByCedula } from "../lib/users";
+
+const normCed = (s) => (s || "").toString().trim().replace(/[.\s-]/g, "");
 
 export default function UserRegister() {
   const [params] = useSearchParams();
-  const cedulaFromQuery = params.get("cedula") || "";
+  const cedulaFromQuery = normCed(params.get("cedula"));
   const [form, setForm] = useState({
     nombreCompleto: "",
     cedula: cedulaFromQuery,
@@ -15,24 +17,33 @@ export default function UserRegister() {
 
   const onChange = (e) => {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm((f) => ({
+      ...f,
+      [name]: name === "cedula" ? normCed(value) : value,
+    }));
   };
 
   const submit = async (e) => {
     e.preventDefault();
     const { nombreCompleto, cedula, correo } = form;
-    if (!nombreCompleto.trim() || !cedula.trim() || !correo.trim()) return;
+    const ced = normCed(cedula);
+    if (!nombreCompleto.trim() || !ced || !correo.trim()) return;
     if (!correo.includes("@")) return;
     setSaving(true);
     try {
+      const existing = await getUserByCedula(ced);
+      if (existing) {
+        alert("La cédula ya está registrada");
+        return;
+      }
       await createUser({
-        cedula: cedula.trim(),
+        cedula: ced,
         nombreCompleto: nombreCompleto.trim(),
         correo: correo.trim(),
         role: "auxiliar",
       });
       localStorage.setItem("role", "auxiliar");
-      localStorage.setItem("userId", cedula.trim());
+      localStorage.setItem("userId", ced);
       localStorage.setItem("userName", nombreCompleto.trim());
       navigate("/auxiliar");
     } catch (err) {
