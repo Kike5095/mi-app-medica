@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserByCedula, isCedulaInSuperAdmins } from "../lib/users";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
@@ -10,6 +10,10 @@ export default function LoginByCedula() {
   const [cedula, setCedula] = useState("");
   const [buscando, setBuscando] = useState(false);
   const nav = useNavigate();
+
+  useEffect(() => {
+    document.title = "Acceso del personal · Mi App Médica";
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -61,9 +65,12 @@ export default function LoginByCedula() {
       onSubmit={submit}
       style={{ maxWidth: 420, margin: "40px auto", padding: 16, textAlign: "center" }}
     >
-      <h1 style={{ marginBottom: 20 }}>Ingresar</h1>
+      <h1 style={{ marginBottom: 20 }}>Acceso del personal</h1>
+      <p style={{ marginBottom: 20 }}>
+        Ingresa tu cédula de personal para continuar.
+      </p>
       <input
-        placeholder="Cédula"
+        placeholder="Cédula del personal"
         value={cedula}
         onChange={(e) => setCedula(normCed(e.target.value))}
         style={{ display: "block", width: "100%", padding: 10, marginBottom: 12 }}
