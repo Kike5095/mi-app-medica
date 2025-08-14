@@ -67,7 +67,11 @@ export default function UsersAdmin() {
         localStorage.setItem("role", newRole);
         if (newRole !== "admin") {
           const route =
-            newRole === "medico" ? "/medico" : newRole === "auxiliar" ? "/auxiliar" : "/";
+            newRole === "medico"
+              ? "/medico"
+              : newRole === "auxiliar"
+              ? "/auxiliar"
+              : "/acceso";
           navigate(route);
         }
       }

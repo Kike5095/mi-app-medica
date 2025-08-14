@@ -48,7 +48,7 @@ export default function LoginByCedula() {
         if (r === "admin" || r === "superadmin") nav("/admin");
         else if (r === "medico") nav("/medico");
         else if (r === "auxiliar") nav("/auxiliar");
-        else nav("/");
+        else nav("/acceso");
       } else {
         nav(`/registro?cedula=${encodeURIComponent(ced)}`);
       }

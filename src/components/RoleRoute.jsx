@@ -3,7 +3,7 @@ import { getRole, isSuperAdminLocal } from "../lib/users";
 
 export default function RoleRoute({ children, allow = [] }) {
   const role = getRole().toLowerCase();
-  if (!role) return <Navigate to="/" replace />;
+  if (!role) return <Navigate to="/acceso" replace />;
   const ok = allow.map((r) => r.toLowerCase()).includes(role) || isSuperAdminLocal();
-  return ok ? children : <Navigate to="/" replace />;
+  return ok ? children : <Navigate to="/acceso" replace />;
 }
