@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import LoginByCedula from "./components/LoginByCedula.jsx";
+import AccessByEmail from "./components/AccessByEmail.jsx";
 import Landing from "./pages/Landing.jsx";
 import Privacidad from "./pages/Privacidad.jsx";
 import AvisoLegal from "./pages/AvisoLegal.jsx";
@@ -42,7 +43,8 @@ export default function App() {
       <Routes>
         {/* públicas */}
         <Route path="/" element={<Landing />} />
-        <Route path="/acceso" element={<LoginByCedula />} />
+        <Route path="/acceso" element={<AccessByEmail />} />
+        <Route path="/acceso-legacy" element={<LoginByCedula />} />
         <Route path="/registro" element={<UserRegister />} />
         <Route path="/privacidad" element={<Privacidad />} />
         <Route path="/aviso-legal" element={<AvisoLegal />} />
