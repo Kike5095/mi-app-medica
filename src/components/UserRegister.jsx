@@ -87,7 +87,7 @@ export default function UserRegister() {
         <button
           type="button"
           className="btn ghost"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/acceso")}
           style={{ flex: 1 }}
         >
           Cancelar
