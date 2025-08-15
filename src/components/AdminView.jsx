@@ -24,6 +24,7 @@ import {
   canChangeTargetUser,
   isPrivileged,
 } from "../lib/db";
+import Button from "../ui/components/Button";
 
 function RolSelect({ value, disabled, onChange }) {
   return (
@@ -269,9 +270,7 @@ export default function AdminView() {
           </div>
         </div>
 
-        <button className="btn primary" onClick={() => setCreating(true)}>
-          Crear paciente
-        </button>
+        <Button onClick={() => setCreating(true)}>Crear paciente</Button>
 
         {renderTable("Pendientes", pendientes, "pendiente")}
         {renderTable("Activos", activos, "activo")}

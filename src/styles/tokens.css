@@ -1,0 +1,15 @@
+/* Variables de color y tipografía provenientes de Lovable */
+:root {
+  /* colores base – copiar tokens del repo Lovable */
+  --color-primary: #1a6aff;
+  --color-primary-600: #1557cc;
+  --color-bg: #f7f9fc;
+  --color-panel: #ffffff;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --radius-md: 12px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  /* tipografía */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}

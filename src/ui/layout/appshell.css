@@ -1,0 +1,14 @@
+.app-shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-border);
+  padding: 10px 16px;
+}
+.app-shell__brand {
+  font-weight: 700;
+}
+.app-shell__main {
+  padding-top: 20px;
+}
