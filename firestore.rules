@@ -1,6 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function email() {
+      return request.auth.token.email != null ? lower(request.auth.token.email) : "";
+    }
+    // La lista se inyecta por funciones/claims; como fallback, bloqueamos por prefijo "superadmin"
+    function isSuperAdmin() {
+      // Si usas custom claims, cámbialo a: return request.auth.token.superadmin == true;
+      return email() == "doctorcorreap@gmail.com";
+    }
+    function isAdmin() {
+      return request.auth.token.admin == true || isSuperAdmin();
+    }
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow update: if isAdmin() &&
+                    !( ("correo" in resource.data) && lower(resource.data.correo) == "doctorcorreap@gmail.com" );
+      allow create: if isAdmin();
+    }
     match /patients/{patientId}/vitals/{vitalId} {
       allow read: if request.auth != null;
       allow create, update: if request.auth != null && validVital();
