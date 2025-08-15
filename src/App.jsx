@@ -5,6 +5,7 @@ import AuxiliarView from "./components/AuxiliarView.jsx";
 import PatientDetail from "./components/PatientDetail.jsx";
 import AccessByEmail from "./components/AccessByEmail.jsx";
 import CreateAccount from "./components/CreateAccount.jsx";
+import AppShell from "./ui/layout/AppShell";
 import { destinationForRole } from "./lib/auth";
 
 export function getRole() {
@@ -48,50 +49,52 @@ function ProtectedRoute({ element, allow = [] }) {
 export default function App() {
   const role = getRole();
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={<Navigate to={role ? destinationForRole(role) : "/login"} replace />}
-      />
-      <Route path="/login" element={<AccessByEmail />} />
-      <Route path="/create-account" element={<CreateAccount />} />
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute
-            allow={["admin", "superadmin"]}
-            element={<AdminView />}
-          />
-        }
-      />
-      <Route
-        path="/medico"
-        element={
-          <ProtectedRoute
-            allow={["medico", "admin", "superadmin"]}
-            element={<MedicoView />}
-          />
-        }
-      />
-      <Route
-        path="/auxiliar"
-        element={
-          <ProtectedRoute
-            allow={["auxiliar", "admin", "superadmin"]}
-            element={<AuxiliarView />}
-          />
-        }
-      />
-      <Route
-        path="/paciente/:id"
-        element={
-          <ProtectedRoute
-            allow={["medico", "auxiliar", "admin", "superadmin"]}
-            element={<PatientDetail />}
-          />
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <AppShell>
+      <Routes>
+        <Route
+          path="/"
+          element={<Navigate to={role ? destinationForRole(role) : "/login"} replace />}
+        />
+        <Route path="/login" element={<AccessByEmail />} />
+        <Route path="/create-account" element={<CreateAccount />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute
+              allow={["admin", "superadmin"]}
+              element={<AdminView />}
+            />
+          }
+        />
+        <Route
+          path="/medico"
+          element={
+            <ProtectedRoute
+              allow={["medico", "admin", "superadmin"]}
+              element={<MedicoView />}
+            />
+          }
+        />
+        <Route
+          path="/auxiliar"
+          element={
+            <ProtectedRoute
+              allow={["auxiliar", "admin", "superadmin"]}
+              element={<AuxiliarView />}
+            />
+          }
+        />
+        <Route
+          path="/paciente/:id"
+          element={
+            <ProtectedRoute
+              allow={["medico", "auxiliar", "admin", "superadmin"]}
+              element={<PatientDetail />}
+            />
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AppShell>
   );
 }
