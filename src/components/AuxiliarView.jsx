@@ -14,8 +14,9 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import VitalCharts from "./VitalCharts";
-import LogoutButton from "./LogoutButton";
 import RoleSwitcher from "./RoleSwitcher";
+import TopBar from "./TopBar";
+import SuperNav from "./SuperNav";
 import { parseBP as parseBPRaw } from "../utils/bp";
 import { finDisplay } from "../utils/dates";
 import { isAdmin as _isAdmin, assertAdmin as _assertAdmin } from "../utils/roles";
@@ -357,11 +358,12 @@ export default function AuxiliarView() {
 
   return (
     <div className="page">
+      {isSuperAdminLocal() && <SuperNav />}
       <div className="container">
+        <TopBar title="Panel Auxiliar" />
         <div className="section-header">
           <h1 className="section-title">Auxiliar – Registro de signos</h1>
           <div style={{ display: "flex", gap: 8 }}>
-            <LogoutButton />
             {isSuperAdminLocal() && <RoleSwitcher />}
           </div>
         </div>
