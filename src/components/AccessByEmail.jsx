@@ -25,20 +25,20 @@ export default function AccessByEmail() {
     try {
       const user = await findUserByEmail(value);
       if (!user) {
-        setError("No se encontró tu correo. Te llevaremos al registro.");
+        // Si no existe, redirige al registro
         navigate(`/create-account?email=${encodeURIComponent(value)}`);
         return;
       }
 
       const role = resolveRole(value, user);
 
-      // Persistimos sesión ligera en localStorage (la app ya la usa para ruteo)
+      // Sesión ligera (como ya usas)
       localStorage.setItem("role", role);
       localStorage.setItem("userEmail", value);
       localStorage.setItem("userName", user.nombreCompleto || user.nombre || "");
       localStorage.setItem("userCedula", user.cedula || "");
 
-      // Redirige según rol
+      // Redirige por rol
       navigate(destinationForRole(role), { replace: true });
     } catch (err) {
       console.error(err);
@@ -49,29 +49,44 @@ export default function AccessByEmail() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-2">Acceso del personal</h1>
-      <p className="text-gray-600 mb-6">
-        Ingresa con correo registrado. Si no estás en la lista, podrás registrarte.
-      </p>
+    <div className="container-app">
+      <div className="card" style={{ maxWidth: 520, margin: "48px auto", padding: 24 }}>
+        <h1 className="section-title" style={{ marginBottom: 8 }}>
+          Acceso del personal
+        </h1>
+        <p style={{ marginBottom: 16, color: "var(--color-muted, #6b7280)" }}>
+          Ingresa con correo registrado. Si no estás en la lista, podrás registrarte.
+        </p>
 
-      <form onSubmit={onSubmit} className="space-y-3">
-        <input
-          type="email"
-          className="w-full border rounded px-3 py-2"
-          placeholder="tucorreo@hospital.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoFocus
-        />
-        {error && <div className="text-red-600 text-sm">{error}</div>}
-        <button
-          disabled={loading}
-          className="w-full bg-blue-600 disabled:opacity-60 text-white rounded px-3 py-2"
-        >
-          {loading ? "Validando..." : "Continuar"}
-        </button>
-      </form>
+        <form onSubmit={onSubmit}>
+          <input
+            type="email"
+            placeholder="tucorreo@hospital.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoFocus
+            style={{
+              width: "100%",
+              border: "1px solid var(--color-border)",
+              borderRadius: "10px",
+              padding: "10px 12px",
+              background: "#fff",
+              marginBottom: 12,
+              outline: "none",
+            }}
+          />
+
+          {error && (
+            <div style={{ color: "#b91c1c", fontSize: 14, marginBottom: 12 }}>
+              {error}
+            </div>
+          )}
+
+          <button type="submit" className="btn" style={{ width: "100%" }} disabled={loading}>
+            {loading ? "Validando..." : "Continuar"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
