@@ -1,21 +1,34 @@
-import React from "react";
+import { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Home from "./pages/Home.jsx";
 import AccessByEmail from "./pages/AccessByEmail.jsx";
-// Si tienes estas páginas, déjalas; si no, ignóralas.
-const NotFound = () => <div style={{padding:24}}>Página no encontrada.</div>;
+import NotFound from "./pages/NotFound.jsx";
+import Home from "./pages/Home.jsx";
+
+// Importa tus resolvers si existen; de lo contrario, comenta esas rutas.
+// import AdminResolved from "./pages/AdminResolved.jsx";
+// import MedicoResolved from "./pages/MedicoResolved.jsx";
+// import AuxiliarResolved from "./pages/AuxiliarResolved.jsx";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      {/* Ruta oficial de acceso */}
-      <Route path="/acceso" element={<AccessByEmail />} />
-      {/* Alias opcionales por si se enlaza diferente */}
-      <Route path="/login" element={<Navigate to="/acceso" replace />} />
-      <Route path="/ingresar" element={<Navigate to="/acceso" replace />} />
-      {/* Fallback */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<div className="p-6">Cargando…</div>}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/acceso" element={<AccessByEmail />} />
+
+        {/**
+        <Route path="/admin/*" element={<AdminResolved />} />
+        <Route path="/medico/*" element={<MedicoResolved />} />
+        <Route path="/auxiliar/*" element={<AuxiliarResolved />} />
+        */}
+
+        {/* alias comunes (opcional) */}
+        <Route path="/login" element={<Navigate to="/acceso" replace />} />
+        <Route path="/ingresar" element={<Navigate to="/acceso" replace />} />
+
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
