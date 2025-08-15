@@ -4,6 +4,7 @@ import MedicoView from "./components/MedicoView.jsx";
 import AuxiliarView from "./components/AuxiliarView.jsx";
 import PatientDetail from "./components/PatientDetail.jsx";
 import AccessByEmail from "./components/AccessByEmail.jsx";
+import CreateAccount from "./components/CreateAccount.jsx";
 import { destinationForRole } from "./lib/auth";
 
 export function getRole() {
@@ -53,6 +54,7 @@ export default function App() {
         element={<Navigate to={role ? destinationForRole(role) : "/login"} replace />}
       />
       <Route path="/login" element={<AccessByEmail />} />
+      <Route path="/create-account" element={<CreateAccount />} />
       <Route
         path="/admin"
         element={
