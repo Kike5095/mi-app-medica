@@ -14,6 +14,7 @@ import TopBar from "./TopBar";
 import SuperNav from "./SuperNav";
 import { asDate, ingresoDisplay, finDisplay } from "../utils/dates";
 import { isSuperAdminLocal } from "../lib/users";
+import { displayCedula } from "../utils/format";
 
 export default function MedicoView() {
   const nav = useNavigate();
@@ -125,7 +126,7 @@ export default function MedicoView() {
                         p.nombreCompleto ||
                         `${p.firstName || ""} ${p.lastName || ""}` ||
                         "—";
-                      const ced = p.cedula || "—";
+                      const ced = displayCedula(p.cedula) || "—";
                       const edadTxt =
                         p.edad || p.edad === 0 ? String(p.edad) : "—";
                       const dxTxt = p.diagnostico
@@ -194,7 +195,7 @@ export default function MedicoView() {
                         p.nombreCompleto ||
                         `${p.firstName || ""} ${p.lastName || ""}` ||
                         "—";
-                      const ced = p.cedula || "—";
+                      const ced = displayCedula(p.cedula) || "—";
                       const edadTxt =
                         p.edad || p.edad === 0 ? String(p.edad) : "—";
                       const dxTxt = p.diagnostico

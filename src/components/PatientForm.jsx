@@ -12,6 +12,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { assertAdmin } from "../utils/roles";
+import { normalizeCedula } from "../utils/format";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";
@@ -60,9 +61,10 @@ export default function PatientForm({
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+    const cedulaNorm = normalizeCedula(form.cedula);
     if (
       !form.nombreCompleto.trim() ||
-      !form.cedula.trim() ||
+      !cedulaNorm ||
       !form.finEstimado
     ) {
       setError(
@@ -89,7 +91,7 @@ export default function PatientForm({
         assertAdmin();
         const payload = {
           nombreCompleto: form.nombreCompleto.trim(),
-          cedula: String(form.cedula).trim(),
+          cedula: cedulaNorm,
           edad: nEdad,
           diagnostico: diag,
           finEstimadoAt: finEstimadoDate
@@ -102,7 +104,7 @@ export default function PatientForm({
       } else {
         const q = query(
           collection(db, "patients"),
-          where("cedula", "==", String(form.cedula).trim())
+          where("cedula", "==", cedulaNorm)
         );
         const snap = await getDocs(q);
         if (!snap.empty) {
@@ -112,7 +114,7 @@ export default function PatientForm({
         }
         const nuevoPaciente = {
           nombreCompleto: form.nombreCompleto.trim(),
-          cedula: String(form.cedula).trim(),
+          cedula: cedulaNorm,
           status: "pendiente",
           fechaIngreso: serverTimestamp(),
           ingresoAt: serverTimestamp(),
