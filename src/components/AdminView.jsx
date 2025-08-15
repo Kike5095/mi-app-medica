@@ -10,8 +10,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
 import PatientForm from "./PatientForm";
-import LogoutButton from "./LogoutButton";
 import RoleSwitcher from "./RoleSwitcher";
+import TopBar from "./TopBar";
+import SuperNav from "./SuperNav";
 import { ingresoDisplay, finDisplay } from "../utils/dates";
 import { isAdmin } from "../utils/roles";
 import { isSuperAdminLocal } from "../lib/users";
@@ -165,14 +166,15 @@ export default function AdminView() {
 
   return (
     <div className="page">
+      {isSuperAdminLocal() && <SuperNav />}
       <div className="container">
+        <TopBar title="Panel Admin" />
         <div className="section-header">
           <h1 className="section-title">Pacientes</h1>
           <div style={{ display: "flex", gap: 8 }}>
             {isAdmin() && (
               <button className="btn" onClick={() => navigate("/usuarios")}>Usuarios</button>
             )}
-            <LogoutButton />
             {isSuperAdminLocal() && <RoleSwitcher />}
           </div>
         </div>

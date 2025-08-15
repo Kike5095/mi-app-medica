@@ -14,7 +14,9 @@ import {
 } from "firebase/firestore";
 import { parseBP } from "../utils/bp";
 import VitalCharts from "./VitalCharts";
-import LogoutButton from "./LogoutButton";
+import TopBar from "./TopBar";
+import SuperNav from "./SuperNav";
+import { isSuperAdminLocal } from "../lib/users";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";
@@ -123,13 +125,13 @@ export default function PatientDetail() {
   if (patient === undefined) {
     return (
       <div className="page">
+        {isSuperAdminLocal() && <SuperNav />}
         <div className="container">
+          <TopBar title="Detalle del paciente" />
           <div className="section-header">
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button className="btn" onClick={handleBack}>← Volver</button>
-              <h1 className="section-title">Detalle del paciente</h1>
             </div>
-            <LogoutButton />
           </div>
           <p>Cargando...</p>
         </div>
@@ -140,13 +142,13 @@ export default function PatientDetail() {
   if (patient === null) {
     return (
       <div className="page">
+        {isSuperAdminLocal() && <SuperNav />}
         <div className="container">
+          <TopBar title="Detalle del paciente" />
           <div className="section-header">
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button className="btn" onClick={handleBack}>← Volver</button>
-              <h1 className="section-title">Detalle del paciente</h1>
             </div>
-            <LogoutButton />
           </div>
           <p>Paciente no encontrado.</p>
         </div>
@@ -156,13 +158,13 @@ export default function PatientDetail() {
 
   return (
     <div className="page">
+      {isSuperAdminLocal() && <SuperNav />}
       <div className="container">
+        <TopBar title="Detalle del paciente" />
         <div className="section-header">
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button className="btn" onClick={handleBack}>← Volver</button>
-            <h1 className="section-title">Detalle del paciente</h1>
           </div>
-          <LogoutButton />
         </div>
 
         <style>{`
