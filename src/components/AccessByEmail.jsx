@@ -25,20 +25,14 @@ export default function AccessByEmail() {
     try {
       const user = await findUserByEmail(value);
       if (!user) {
-        // Si no existe, redirige al registro
         navigate(`/create-account?email=${encodeURIComponent(value)}`);
         return;
       }
-
       const role = resolveRole(value, user);
-
-      // Sesión ligera (como ya usas)
       localStorage.setItem("role", role);
       localStorage.setItem("userEmail", value);
       localStorage.setItem("userName", user.nombreCompleto || user.nombre || "");
       localStorage.setItem("userCedula", user.cedula || "");
-
-      // Redirige por rol
       navigate(destinationForRole(role), { replace: true });
     } catch (err) {
       console.error(err);
