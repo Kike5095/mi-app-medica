@@ -21,6 +21,7 @@ import { parseBP as parseBPRaw } from "../utils/bp";
 import { finDisplay } from "../utils/dates";
 import { isAdmin as _isAdmin, assertAdmin as _assertAdmin } from "../utils/roles";
 import { isSuperAdminLocal } from "../lib/users";
+import { normalizeCedula, displayCedula } from "../utils/format";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";
@@ -191,9 +192,9 @@ export default function AuxiliarView() {
       vitalsUnsub.current = null;
     }
 
-    const ced = cedulaBuscar.trim();
+    const ced = normalizeCedula(cedulaBuscar);
     if (!ced) {
-      setInfo("Escribe una cédula para buscar.");
+      setInfo("Ingresa una cédula válida");
       return;
     }
     try {
@@ -406,7 +407,7 @@ export default function AuxiliarView() {
                     </p>
                     <p>
                       <strong>Cédula:</strong>{" "}
-                      <span className="no-detect">{paciente.cedula || "—"}</span>
+                      <span className="no-detect">{displayCedula(paciente.cedula) || "—"}</span>
                     </p>
                     <p>
                       <b>Estado:</b> {paciente.status || paciente.estado || "-"}

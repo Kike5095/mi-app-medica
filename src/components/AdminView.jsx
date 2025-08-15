@@ -18,6 +18,7 @@ import SuperNav from "./SuperNav";
 import { ingresoDisplay, finDisplay } from "../utils/dates";
 import { isAdmin } from "../utils/roles";
 import { isSuperAdminLocal } from "../lib/users";
+import { displayCedula } from "../utils/format";
 
 function formatName(p) {
   const name = (p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim();
@@ -121,7 +122,9 @@ export default function AdminView() {
       return (
         <tr key={p.id}>
           <td><span className="no-detect">{formatName(p)}</span></td>
-          <td><span className="no-detect">{p.cedula || "—"}</span></td>
+          <td>
+            <span className="no-detect">{displayCedula(p.cedula) || "—"}</span>
+          </td>
           <td>{showVal(p.edad)}</td>
           <td title={p.diagnostico || ""}>{truncate(p.diagnostico, 30)}</td>
           <td>{ingreso}</td>
@@ -200,18 +203,6 @@ export default function AdminView() {
         <div className="section-header">
           <h1 className="section-title">Pacientes</h1>
           <div style={{ display: "flex", gap: 8 }}>
-            {isAdmin() && (
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById("usuarios");
-                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="btn"
-              >
-                Usuarios
-              </button>
-            )}
             {isSuperAdminLocal() && <RoleSwitcher />}
           </div>
         </div>
@@ -258,7 +249,7 @@ export default function AdminView() {
                   {users.map((u) => (
                     <tr key={u.id}>
                       <td>{u.nombreCompleto || "—"}</td>
-                      <td>{u.cedula || "—"}</td>
+                      <td>{displayCedula(u.cedula) || "—"}</td>
                       <td>{u.correo || "—"}</td>
                       <td style={{ textTransform: "capitalize" }}>{u.role || "—"}</td>
                       <td>{fdate(u.updatedAt || u.createdAt)}</td>

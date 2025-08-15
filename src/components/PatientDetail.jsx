@@ -17,6 +17,7 @@ import VitalCharts from "./VitalCharts";
 import TopBar from "./TopBar";
 import SuperNav from "./SuperNav";
 import { isSuperAdminLocal } from "../lib/users";
+import { displayCedula } from "../utils/format";
 
 function showVal(v) {
   return v || v === 0 ? String(v) : "—";
@@ -187,7 +188,7 @@ export default function PatientDetail() {
               <b>Nombre:</b> {patient.nombreCompleto || `${patient.firstName || ""} ${patient.lastName || ""}`.trim() || "—"}
             </div>
             <div style={{ marginBottom: 8 }}>
-              <b>Cédula:</b> {patient.cedula || "—"}
+              <b>Cédula:</b> {displayCedula(patient.cedula) || "—"}
             </div>
             <div style={{ marginBottom: 8 }}>
               <b>Edad:</b> {showVal(patient.edad)}
