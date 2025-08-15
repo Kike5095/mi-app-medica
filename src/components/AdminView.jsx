@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   collection,
   onSnapshot,
@@ -6,6 +6,8 @@ import {
   updateDoc,
   serverTimestamp,
   getDocs,
+  query,
+  orderBy,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig";
@@ -31,10 +33,23 @@ function truncate(t, n = 40) {
   return t.length > n ? t.slice(0, n) + "…" : t;
 }
 
+function fdate(ts) {
+  if (!ts) return "—";
+  try {
+    if (typeof ts === "object" && ts.seconds)
+      return new Date(ts.seconds * 1000).toLocaleString();
+    const d = ts instanceof Date ? ts : new Date(ts);
+    return isNaN(d) ? "—" : d.toLocaleString();
+  } catch {
+    return "—";
+  }
+}
+
 export default function AdminView() {
   const [patients, setPatients] = useState([]);
   const [creating, setCreating] = useState(false);
   const [editingPatient, setEditingPatient] = useState(null);
+  const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,14 +61,27 @@ export default function AdminView() {
     return () => unsub();
   }, []);
 
-  const pendientes = patients.filter(
-    (p) => (p.status || "").toLowerCase() === "pendiente"
+  useEffect(() => {
+    const q = query(collection(db, "users"), orderBy("updatedAt", "desc"));
+    const unsub = onSnapshot(q, (snap) => {
+      const list = [];
+      snap.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+      setUsers(list);
+    });
+    return () => unsub();
+  }, []);
+
+  const pendientes = useMemo(
+    () => patients.filter((p) => (p.status || "").toLowerCase() === "pendiente"),
+    [patients]
   );
-  const activos = patients.filter(
-    (p) => (p.status || "").toLowerCase() === "activo"
+  const activos = useMemo(
+    () => patients.filter((p) => (p.status || "").toLowerCase() === "activo"),
+    [patients]
   );
-  const finalizados = patients.filter(
-    (p) => (p.status || "").toLowerCase() === "finalizado"
+  const finalizados = useMemo(
+    () => patients.filter((p) => (p.status || "").toLowerCase() === "finalizado"),
+    [patients]
   );
 
   const refrescar = async () => {
@@ -173,7 +201,16 @@ export default function AdminView() {
           <h1 className="section-title">Pacientes</h1>
           <div style={{ display: "flex", gap: 8 }}>
             {isAdmin() && (
-              <button className="btn" onClick={() => navigate("/usuarios")}>Usuarios</button>
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("usuarios");
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="btn"
+              >
+                Usuarios
+              </button>
             )}
             {isSuperAdminLocal() && <RoleSwitcher />}
           </div>
@@ -186,6 +223,52 @@ export default function AdminView() {
         {renderTable("Pendientes", pendientes, "pendiente")}
         {renderTable("Activos", activos, "activo")}
         {renderTable("Finalizados", finalizados, "finalizado")}
+
+        <section id="usuarios" style={{ marginTop: 32 }}>
+          <div className="card">
+            <div className="card-header">
+              <h2 style={{ fontWeight: 700, fontSize: 18 }}>Usuarios registrados</h2>
+              <p style={{ color: "#667085", marginTop: 4 }}>
+                Lista en tiempo real desde Firestore
+              </p>
+            </div>
+
+            <div className="table-wrapper">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Cédula</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Actualizado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        style={{ textAlign: "center", color: "#98A2B3" }}
+                      >
+                        No hay usuarios
+                      </td>
+                    </tr>
+                  )}
+                  {users.map((u) => (
+                    <tr key={u.id}>
+                      <td>{u.nombreCompleto || "—"}</td>
+                      <td>{u.cedula || "—"}</td>
+                      <td>{u.correo || "—"}</td>
+                      <td style={{ textTransform: "capitalize" }}>{u.role || "—"}</td>
+                      <td>{fdate(u.updatedAt || u.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
         {creating && (
           <PatientForm
