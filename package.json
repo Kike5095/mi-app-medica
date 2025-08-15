@@ -15,10 +15,9 @@
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.1",
-    "recharts": "^2.10.4"
-  },
-  "devDependencies": {
+    "recharts": "^2.10.4",
     "@vitejs/plugin-react": "^4.3.2",
     "vite": "^5.4.1"
-  }
+  },
+  "devDependencies": {}
 }
