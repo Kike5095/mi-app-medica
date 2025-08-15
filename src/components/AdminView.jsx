@@ -24,11 +24,16 @@ import {
   canChangeTargetUser,
   isPrivileged,
 } from "../lib/db";
-import Button from "../ui/components/Button";
+import { Button } from "./ui/button";
 
 function RolSelect({ value, disabled, onChange }) {
   return (
-    <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+    <select
+      className="input"
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+    >
       <option value="auxiliar">Auxiliar</option>
       <option value="medico">Medico</option>
       <option value="admin">Admin</option>
@@ -259,79 +264,77 @@ export default function AdminView() {
   );
 
   return (
-    <div className="page">
+    <div className="container-app">
       {isSuperAdminLocal() && <SuperNav />}
-      <div className="container">
-        <TopBar title="Panel Admin" />
-        <div className="section-header">
-          <h1 className="section-title">Pacientes</h1>
-          <div style={{ display: "flex", gap: 8 }}>
-            {isSuperAdminLocal() && <RoleSwitcher />}
+      <TopBar title="Panel Admin" />
+      <div className="section-header">
+        <h1 className="section-title">Pacientes</h1>
+        <div style={{ display: "flex", gap: 8 }}>
+          {isSuperAdminLocal() && <RoleSwitcher />}
+        </div>
+      </div>
+
+      <Button onClick={() => setCreating(true)}>Crear paciente</Button>
+
+      {renderTable("Pendientes", pendientes, "pendiente")}
+      {renderTable("Activos", activos, "activo")}
+      {renderTable("Finalizados", finalizados, "finalizado")}
+
+      <section id="usuarios" style={{ marginTop: 32 }}>
+        <div className="card">
+          <div className="card-header">
+            <h2 style={{ fontWeight: 700, fontSize: 18 }}>Usuarios registrados</h2>
+            <p style={{ color: "#667085", marginTop: 4 }}>
+              Lista en tiempo real desde Firestore
+            </p>
+          </div>
+
+          <div className="table-wrapper">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Cédula</th>
+                  <th>Correo</th>
+                  <th>Rol</th>
+                  <th>Acción</th>
+                  <th>Actualizado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      style={{ textAlign: "center", color: "#98A2B3" }}
+                    >
+                      No hay usuarios
+                    </td>
+                  </tr>
+                )}
+                {users.map((u) => (
+                  <UserRow key={u.id} u={u} />
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
+      </section>
 
-        <Button onClick={() => setCreating(true)}>Crear paciente</Button>
-
-        {renderTable("Pendientes", pendientes, "pendiente")}
-        {renderTable("Activos", activos, "activo")}
-        {renderTable("Finalizados", finalizados, "finalizado")}
-
-        <section id="usuarios" style={{ marginTop: 32 }}>
-          <div className="card">
-            <div className="card-header">
-              <h2 style={{ fontWeight: 700, fontSize: 18 }}>Usuarios registrados</h2>
-              <p style={{ color: "#667085", marginTop: 4 }}>
-                Lista en tiempo real desde Firestore
-              </p>
-            </div>
-
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Cédula</th>
-                    <th>Correo</th>
-                    <th>Rol</th>
-                    <th>Acción</th>
-                    <th>Actualizado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        style={{ textAlign: "center", color: "#98A2B3" }}
-                      >
-                        No hay usuarios
-                      </td>
-                    </tr>
-                  )}
-                  {users.map((u) => (
-                    <UserRow key={u.id} u={u} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {creating && (
-          <PatientForm
-            onCreated={refrescar}
-            onClose={() => setCreating(false)}
-          />
-        )}
-        {editingPatient && (
-          <PatientForm
-            mode="edit"
-            initialValues={editingPatient}
-            onUpdated={refrescar}
-            onClose={() => setEditingPatient(null)}
-          />
-        )}
-      </div>
+      {creating && (
+        <PatientForm
+          onCreated={refrescar}
+          onClose={() => setCreating(false)}
+        />
+      )}
+      {editingPatient && (
+        <PatientForm
+          mode="edit"
+          initialValues={editingPatient}
+          onUpdated={refrescar}
+          onClose={() => setEditingPatient(null)}
+        />
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import AccessByEmail from "./components/AccessByEmail.jsx";
 import CreateAccount from "./components/CreateAccount.jsx";
 import AppShell from "./ui/layout/AppShell";
 import { destinationForRole } from "./lib/auth";
+import UiDemo from "./UiDemo";
 
 export function getRole() {
   try {
@@ -57,6 +58,7 @@ export default function App() {
         />
         <Route path="/login" element={<AccessByEmail />} />
         <Route path="/create-account" element={<CreateAccount />} />
+        <Route path="/ui-demo" element={<UiDemo />} />
         <Route
           path="/admin"
           element={
