@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { findUserByEmail, resolveRole, destinationForRole, normalizeEmail } from "../lib/auth";
+import {
+  findUserByEmail,
+  resolveRole,
+  destinationForRole,
+  normalizeEmail,
+} from "../lib/auth";
 
 export default function AccessByEmail() {
   const [email, setEmail] = useState("");
@@ -20,7 +25,8 @@ export default function AccessByEmail() {
     try {
       const user = await findUserByEmail(value);
       if (!user) {
-        setError("No se encontró tu correo. Solicita registro al administrador.");
+        setError("No se encontró tu correo. Te llevaremos al registro.");
+        navigate(`/create-account?email=${encodeURIComponent(value)}`);
         return;
       }
 
@@ -46,7 +52,7 @@ export default function AccessByEmail() {
     <div className="max-w-md mx-auto p-6">
       <h1 className="text-2xl font-semibold mb-2">Acceso del personal</h1>
       <p className="text-gray-600 mb-6">
-        Ingresa con correo registrado. Si no estás en la lista, solicita tu registro al administrador.
+        Ingresa con correo registrado. Si no estás en la lista, podrás registrarte.
       </p>
 
       <form onSubmit={onSubmit} className="space-y-3">
