@@ -134,7 +134,7 @@ export default function AccessByEmail() {
     <div style={{ maxWidth: 520, margin: "40px auto", padding: 16 }}>
       <h1 style={{ marginBottom: 8 }}>Acceso del personal</h1>
       <p style={{ marginTop: 0, color: "#555" }}>
-        Ingresa con tu correo institucional. Si no estás registrado, podrás crear tu perfil.
+        Ingresa con correo registrado. Si no estás en la lista, solicita tu registro al administrador.
       </p>
 
       {error && (
