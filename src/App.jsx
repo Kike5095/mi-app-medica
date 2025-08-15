@@ -3,7 +3,8 @@ import AdminView from "./components/AdminView.jsx";
 import MedicoView from "./components/MedicoView.jsx";
 import AuxiliarView from "./components/AuxiliarView.jsx";
 import PatientDetail from "./components/PatientDetail.jsx";
-import Login from "./components/Login.jsx";
+import AccessByEmail from "./components/AccessByEmail.jsx";
+import { destinationForRole } from "./lib/auth";
 
 export function getRole() {
   try {
@@ -44,9 +45,14 @@ function ProtectedRoute({ element, allow = [] }) {
 }
 
 export default function App() {
+  const role = getRole();
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route
+        path="/"
+        element={<Navigate to={role ? destinationForRole(role) : "/login"} replace />}
+      />
+      <Route path="/login" element={<AccessByEmail />} />
       <Route
         path="/admin"
         element={
