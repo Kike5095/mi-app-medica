@@ -1,19 +1,26 @@
-# React + Vite
+# Despliegue en Netlify
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+La aplicación se compila con Vite y puede desplegarse en Netlify sin necesidad de un entorno local.
 
-Currently, two official plugins are available:
+### Comandos de Netlify
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Build command:** `npm run build`
+- **Publish directory:** `dist`
 
-## Expanding the ESLint configuration
+### Variables de entorno
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Configura las siguientes variables en Netlify (y en tu archivo `.env.local` para desarrollo):
+
+- `VITE_API_KEY`
+- `VITE_AUTH_DOMAIN`
+- `VITE_PROJECT_ID`
+- `VITE_STORAGE_BUCKET`
+- `VITE_MESSAGING_SENDER_ID`
+- `VITE_APP_ID`
 
 ## Firestore rules
 
-The Firestore security rules for patient vitals are stored in [`firestore.rules`](firestore.rules). After modifying this file, deploy the changes to Firebase with:
+Las reglas de seguridad de Firestore para los signos vitales de los pacientes se almacenan en [`firestore.rules`](firestore.rules). Después de modificar este archivo, despliega los cambios a Firebase con:
 
 ```bash
 firebase deploy --only firestore:rules

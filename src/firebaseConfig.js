@@ -3,14 +3,14 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// ✅ Config directa (sin .env)
+// Use environment variables so builds work in Netlify and locally.
 const firebaseConfig = {
-  apiKey: "AIzaSyD5qQ2fQN7fZoQ4zvjDfsdzO1wTmI5oNF4",
-  authDomain: "mi-app-medica-ef3fa.firebaseapp.com",
-  projectId: "mi-app-medica-ef3fa",
-  storageBucket: "mi-app-medica-ef3fa.appspot.com", // ojo: appspot.com
-  messagingSenderId: "713331216336",
-  appId: "1:713331216336:web:db2026dfc8b98c60c133d5"
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Helper para tener sesión (anónima) activa cuando lo necesites
+// Helper to ensure an (anonymous) session is active when needed
 export async function ensureAuth() {
   if (!auth.currentUser) {
     await signInAnonymously(auth);
