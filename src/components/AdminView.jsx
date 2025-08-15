@@ -19,6 +19,21 @@ import { ingresoDisplay, finDisplay } from "../utils/dates";
 import { isAdmin } from "../utils/roles";
 import { isSuperAdminLocal } from "../lib/users";
 import { displayCedula } from "../utils/format";
+import {
+  updateUserRoleById,
+  canChangeTargetUser,
+  isPrivileged,
+} from "../lib/db";
+
+function RolSelect({ value, disabled, onChange }) {
+  return (
+    <select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
+      <option value="auxiliar">Auxiliar</option>
+      <option value="medico">Medico</option>
+      <option value="admin">Admin</option>
+    </select>
+  );
+}
 
 function formatName(p) {
   const name = (p.nombreCompleto || `${p.firstName || ""} ${p.lastName || ""}`).trim();
@@ -51,7 +66,13 @@ export default function AdminView() {
   const [creating, setCreating] = useState(false);
   const [editingPatient, setEditingPatient] = useState(null);
   const [users, setUsers] = useState([]);
+  const [savingId, setSavingId] = useState(null);
   const navigate = useNavigate();
+
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUser = storedUser;
+  const currentRole = localStorage.getItem("role") || "";
+  const puedeEditar = isPrivileged(currentUser, currentRole);
 
   useEffect(() => {
     const q = collection(db, "patients");
@@ -113,6 +134,47 @@ export default function AdminView() {
       finAt: ts,
       fechaFin: ts,
     });
+  };
+
+  async function handleSave(u, nextRole) {
+    if (!puedeEditar) return;
+    if (!canChangeTargetUser(u.correo)) {
+      alert("No puedes modificar el rol de un superadmin.");
+      return;
+    }
+    try {
+      setSavingId(u.id);
+      await updateUserRoleById(u.id, nextRole);
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  const UserRow = ({ u }) => {
+    const esSuperTarget = !canChangeTargetUser(u.correo);
+    const [localRole, setLocalRole] = useState(u.role || "auxiliar");
+    const disabled = !puedeEditar || esSuperTarget || savingId === u.id;
+    return (
+      <tr key={u.id}>
+        <td>{u.nombreCompleto || "—"}</td>
+        <td>{displayCedula(u.cedula) || "—"}</td>
+        <td>{u.correo || "—"}</td>
+        <td>
+          <RolSelect value={localRole} disabled={disabled} onChange={setLocalRole} />
+          {esSuperTarget && <div className="caption">Superadmin</div>}
+        </td>
+        <td>
+          <button
+            className="btn"
+            disabled={disabled || localRole === (u.role || "auxiliar")}
+            onClick={() => handleSave(u, localRole)}
+          >
+            {savingId === u.id ? "Guardando…" : "Guardar"}
+          </button>
+        </td>
+        <td>{fdate(u.updatedAt || u.createdAt)}</td>
+      </tr>
+    );
   };
   const renderRows = (list, tipo) =>
     list.map((p) => {
@@ -232,6 +294,7 @@ export default function AdminView() {
                     <th>Cédula</th>
                     <th>Correo</th>
                     <th>Rol</th>
+                    <th>Acción</th>
                     <th>Actualizado</th>
                   </tr>
                 </thead>
@@ -239,7 +302,7 @@ export default function AdminView() {
                   {users.length === 0 && (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         style={{ textAlign: "center", color: "#98A2B3" }}
                       >
                         No hay usuarios
@@ -247,13 +310,7 @@ export default function AdminView() {
                     </tr>
                   )}
                   {users.map((u) => (
-                    <tr key={u.id}>
-                      <td>{u.nombreCompleto || "—"}</td>
-                      <td>{displayCedula(u.cedula) || "—"}</td>
-                      <td>{u.correo || "—"}</td>
-                      <td style={{ textTransform: "capitalize" }}>{u.role || "—"}</td>
-                      <td>{fdate(u.updatedAt || u.createdAt)}</td>
-                    </tr>
+                    <UserRow key={u.id} u={u} />
                   ))}
                 </tbody>
               </table>

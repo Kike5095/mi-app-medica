@@ -1,10 +1,6 @@
 // src/components/SuperNav.jsx
 import { useNavigate, useLocation } from "react-router-dom";
 
-const SUPER_ADMINS = (import.meta.env.VITE_SUPER_ADMINS || "")
-  .split(",")
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
 
 export default function SuperNav() {
   const nav = useNavigate();
@@ -17,9 +13,11 @@ export default function SuperNav() {
   const roleReal = localStorage.getItem("role") || "";
 
   function getDisplayRole(rolReal, email) {
-    if (SUPER_ADMINS.includes((email || "").toLowerCase())) return "Médico";
+    const emailLower = (email || "").toLowerCase();
+    const isHardcodedSuper = emailLower === "doctorcorreap@gmail.com";
+    if (isHardcodedSuper) return "Médico";
     const map = {
-      superadmin: "Super Admin",
+      superadmin: "Admin",
       admin: "Admin",
       medico: "Médico",
       auxiliar: "Auxiliar",
