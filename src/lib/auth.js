@@ -1,68 +1,65 @@
-import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+// Utilidades de autenticación y búsqueda por correo en Firestore
+import { initializeApp, getApps } from "firebase/app";
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 
-export function normalizeEmail(raw) {
-  return String(raw || "").trim().toLowerCase();
+// Import robusto de la config (soporta export default o named)
+import * as rawConfig from "../firebaseConfig.js";
+const firebaseConfig = rawConfig.default || rawConfig.firebaseConfig || rawConfig.config;
+
+if (!firebaseConfig) {
+  console.error("firebaseConfig no encontrado en src/firebaseConfig.js");
 }
 
-function parseAdminsEnv() {
-  const raw = (import.meta?.env?.VITE_SUPER_ADMINS || "").trim();
-  if (!raw) return [];
-  return raw.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Normaliza correo
+export function normalizeEmail(v) {
+  return (v || "").trim().toLowerCase();
 }
 
-/**
- * Busca un usuario por correo en la colección "users".
- * Intenta por: correoLower, correo, email (en ese orden).
- * Si existe pero no tiene correoLower, lo rellena.
- */
-export async function findUserByEmail(email) {
-  const e = normalizeEmail(email);
-  const col = collection(db, "users");
-
-  // 1) correoLower
-  let snap = await getDocs(query(col, where("correoLower", "==", e)));
-  if (snap.empty) {
-    // 2) correo exacto
-    snap = await getDocs(query(col, where("correo", "==", email)));
+// Destino por rol
+export function destinationForRole(role) {
+  switch ((role || "").toLowerCase()) {
+    case "admin":
+    case "administrador":
+      return "/admin";
+    case "medico":
+    case "médico":
+      return "/medico";
+    case "auxiliar":
+      return "/auxiliar";
+    default:
+      return "/admin";
   }
-  if (snap.empty) {
-    // 3) email exacto
-    snap = await getDocs(query(col, where("email", "==", email)));
-  }
-  if (snap.empty) return null;
-
-  const d = snap.docs[0];
-  const data = d.data() || {};
-  // Autorellena correoLower si falta
-  if (!data.correoLower || data.correoLower !== e) {
-    try {
-      await updateDoc(doc(db, "users", d.id), {
-        correoLower: e,
-        updatedAt: serverTimestamp(),
-      });
-    } catch {}
-  }
-  return { id: d.id, ...data };
 }
 
-/**
- * Resuelve rol efectivo: superadmin si está en VITE_SUPER_ADMINS, si no el rol del doc, si no "auxiliar".
- */
+// Resuelve rol a partir del doc de usuario o por dominio
 export function resolveRole(email, userDoc) {
   const e = normalizeEmail(email);
-  const supers = parseAdminsEnv();
-  if (supers.includes(e)) return "superadmin";
-  return userDoc?.role || "auxiliar";
+  const roleFromDoc = userDoc?.rol || userDoc?.role || "";
+  if (roleFromDoc) return roleFromDoc;
+
+  if (e.endsWith("@hospital.com") || e.endsWith("@clinic.com")) return "medico";
+  return "admin";
 }
 
-export function destinationForRole(role) {
-  const map = {
-    admin: "/admin",
-    superadmin: "/superadmin",
-    medico: "/medico",
-    auxiliar: "/auxiliar",
-    default: "/medico",
-  };
-  return map[role] || map.default;
+// Busca en firestore por email en "usuarios" o "users"
+export async function findUserByEmail(email) {
+  const value = normalizeEmail(email);
+  if (!value) return null;
+
+  async function firstBy(collectionName) {
+    const q = query(collection(db, collectionName), where("email", "==", value));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const d = snap.docs[0];
+      return { id: d.id, ...d.data() };
+    }
+    return null;
+  }
+
+  let user = await firstBy("usuarios");
+  if (!user) user = await firstBy("users");
+  return user;
 }
