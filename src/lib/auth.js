@@ -57,7 +57,12 @@ export function resolveRole(email, userDoc) {
 }
 
 export function destinationForRole(role) {
-  if (role === "superadmin" || role === "admin") return "/admin";
-  if (role === "medico") return "/medico";
-  return "/auxiliar";
+  const map = {
+    admin: "/admin",
+    superadmin: "/superadmin",
+    medico: "/medico",
+    auxiliar: "/auxiliar",
+    default: "/medico",
+  };
+  return map[role] || map.default;
 }
