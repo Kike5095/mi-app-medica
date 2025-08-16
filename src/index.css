@@ -24,11 +24,13 @@
 }
 html,body,#root{height:100%}
 body{background:hsl(var(--background)); color:hsl(var(--foreground)); font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial}
-.container-app{ @apply max-w-6xl mx-auto px-6; }
-.card{ @apply bg-white rounded-lg shadow-card border border-[hsl(var(--border))]; }
-.section{ @apply p-6 md:p-8 rounded-xl bg-white border border-[hsl(var(--border))] shadow-card; }
-.table{ @apply w-full bg-white rounded-xl overflow-hidden; border-collapse:separate; border-spacing:0; box-shadow:0 10px 25px -10px rgba(2,14,31,.15); }
-.table th{ @apply text-left text-sm text-gray-500 font-medium bg-slate-100; }
-.table th,.table td{ @apply px-4 py-3 border-b border-[hsl(var(--border))]; }
-.input{ @apply w-full rounded-lg border border-[hsl(var(--border))] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]; }
-.btn{ @apply inline-flex items-center gap-2 font-semibold rounded-lg px-4 py-2 text-white bg-[hsl(var(--primary))] hover:opacity-90; }
+.container-app { @apply mx-auto max-w-6xl px-6; }
+.card { @apply bg-white border rounded-xl shadow-sm; }
+.section { @apply p-6 md:p-8 rounded-xl bg-white border border-[hsl(var(--border))] shadow-card; }
+.table { @apply w-full bg-white rounded-xl overflow-hidden; border-collapse:separate; border-spacing:0; box-shadow:0 10px 25px -10px rgba(2,14,31,.15); }
+.table th { @apply text-left text-sm text-gray-500 font-medium bg-slate-100; }
+.table th,.table td { @apply px-4 py-3 border-b border-[hsl(var(--border))]; }
+.input { @apply w-full rounded-lg border px-3 py-2 focus:outline-none focus:ring; }
+.btn { @apply inline-flex items-center gap-2 font-medium rounded-lg px-4 py-2; }
+.btn-primary { @apply text-white bg-[hsl(var(--primary))]; }
+.btn-outline { @apply border bg-white; }
