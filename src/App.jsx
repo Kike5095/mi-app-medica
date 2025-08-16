@@ -1,16 +1,35 @@
-import { Suspense } from 'react';
-import { Routes, Route, Link, Navigate } from 'react-router-dom';
-import Home from './pages/Home.jsx';
-import AccessByEmail from './pages/AccessByEmail.jsx';
-import NotFound from './pages/NotFound.jsx';
+import { Suspense } from "react";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
+import AccessByEmail from "./pages/AccessByEmail.jsx";
 
-// Placeholders de rutas por rol (mantener simple por ahora)
-function AdminResolved() {
+// Vistas dummy por rol (puedes reemplazar luego)
+function Home() {
   return (
     <div className="container-app">
       <div className="card p-6">
-        <h1 className="text-2xl font-semibold mb-1">Panel Admin</h1>
-        <p className="text-slate-500">Ruta: /admin</p>
+        <h1 className="section-title mb-2">Hospitalización en Casa</h1>
+        <p className="text-muted-foreground mb-6">
+          Portal del Programa de hospitalización en Domicilio para personal autorizado.
+        </p>
+        <div className="flex gap-3">
+          <a href="#programa" className="btn btn-outline">Conocer el programa</a>
+          <Link to="/acceso" className="btn">Acceder al sistema</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Admin() { return <div className="container-app"><div className="card p-6">Panel Admin<br/>Ruta: /admin</div></div>; }
+function Medico() { return <div className="container-app"><div className="card p-6">Panel Médico<br/>Ruta: /medico</div></div>; }
+function Auxiliar(){ return <div className="container-app"><div className="card p-6">Panel Auxiliar<br/>Ruta: /auxiliar</div></div>; }
+
+function NotFound() {
+  return (
+    <div className="container-app">
+      <div className="card p-6">
+        <h1 className="text-2xl font-semibold mb-2">Página no encontrada.</h1>
+        <p className="text-muted-foreground">La ruta que intentas abrir no existe. Usa el menú para regresar.</p>
       </div>
     </div>
   );
@@ -18,40 +37,16 @@ function AdminResolved() {
 
 export default function App() {
   return (
-    <>
-      {/* Header minimal con botón que navega a /acceso */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b">
-        <div className="container-app py-3 flex items-center justify-between">
-          <Link to="/" className="font-semibold text-slate-900">
-            Programa de hospitalización en Domicilio
-          </Link>
-          <nav className="flex items-center gap-2">
-            <Link
-              to="/acceso"
-              className="btn btn-primary"
-              aria-label="Ingresar"
-            >
-              Ingresar
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="py-6">
-        <Suspense fallback={<div className="container-app">Cargando…</div>}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/acceso" element={<AccessByEmail />} />
-            {/* rutas por rol (placeholder simple) */}
-            <Route path="/admin/*" element={<AdminResolved />} />
-            {/* alias comunes o compatibilidad si tenías /login */}
-            <Route path="/login" element={<Navigate to="/acceso" replace />} />
-            {/* fallback 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </main>
-    </>
+    <Suspense fallback={null}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/acceso" element={<AccessByEmail />} />
+        <Route path="/admin/*" element={<Admin />} />
+        <Route path="/medico/*" element={<Medico />} />
+        <Route path="/auxiliar/*" element={<Auxiliar />} />
+        <Route path="/ingresar" element={<Navigate to="/acceso" replace />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }
-
