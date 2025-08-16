@@ -1,42 +1,42 @@
-import { Suspense } from "react";
 import { Routes, Route, Navigate, Link } from "react-router-dom";
+import "./index.css";
+import "./styles/lovables.css";
+
+// Páginas
+import Home from "./pages/Home.jsx";
 import AccessByEmail from "./pages/AccessByEmail.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
-// Vistas dummy por rol (puedes reemplazar luego)
-function Home() {
+// Header sencillo con botón "Ingresar" -> /acceso
+function Header() {
   return (
-    <div className="container-app">
-      <div className="card p-6">
-        <h1 className="section-title mb-2">Hospitalización en Casa</h1>
-        <p className="text-muted-foreground mb-6">
-          Portal del Programa de hospitalización en Domicilio para personal autorizado.
-        </p>
-        <div className="flex gap-3">
-          <a href="#programa" className="btn btn-outline">Conocer el programa</a>
-          <Link to="/acceso" className="btn">Acceder al sistema</Link>
-        </div>
+    <header className="w-full border-b bg-white/70 backdrop-blur">
+      <div className="container-app flex items-center justify-between py-3">
+        <div className="text-sm text-slate-600">Programa de hospitalización en Domicilio</div>
+        <Link to="/acceso" className="btn btn-primary">Ingresar</Link>
       </div>
-    </div>
+    </header>
   );
 }
-
-function Admin() { return <div className="container-app"><div className="card p-6">Panel Admin<br/>Ruta: /admin</div></div>; }
-function Medico() { return <div className="container-app"><div className="card p-6">Panel Médico<br/>Ruta: /medico</div></div>; }
-function Auxiliar(){ return <div className="container-app"><div className="card p-6">Panel Auxiliar<br/>Ruta: /auxiliar</div></div>; }
 
 export default function App() {
   return (
-    <Suspense fallback={null}>
+    <>
+      <Header />
       <Routes>
+        {/* Asegurar Home en "/" */}
         <Route path="/" element={<Home />} />
+
+        {/* Acceso por correo */}
         <Route path="/acceso" element={<AccessByEmail />} />
-        <Route path="/admin/*" element={<Admin />} />
-        <Route path="/medico/*" element={<Medico />} />
-        <Route path="/auxiliar/*" element={<Auxiliar />} />
-        <Route path="/ingresar" element={<Navigate to="/acceso" replace />} />
+
+        {/* Alias por si antes usabas /login */}
+        <Route path="/login" element={<Navigate to="/acceso" replace />} />
+
+        {/* Catch-all */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </Suspense>
+    </>
   );
 }
+
