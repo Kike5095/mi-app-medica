@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Routes, Route, Navigate, Link } from "react-router-dom";
 import AccessByEmail from "./pages/AccessByEmail.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 // Vistas dummy por rol (puedes reemplazar luego)
 function Home() {
@@ -23,17 +24,6 @@ function Home() {
 function Admin() { return <div className="container-app"><div className="card p-6">Panel Admin<br/>Ruta: /admin</div></div>; }
 function Medico() { return <div className="container-app"><div className="card p-6">Panel Médico<br/>Ruta: /medico</div></div>; }
 function Auxiliar(){ return <div className="container-app"><div className="card p-6">Panel Auxiliar<br/>Ruta: /auxiliar</div></div>; }
-
-function NotFound() {
-  return (
-    <div className="container-app">
-      <div className="card p-6">
-        <h1 className="text-2xl font-semibold mb-2">Página no encontrada.</h1>
-        <p className="text-muted-foreground">La ruta que intentas abrir no existe. Usa el menú para regresar.</p>
-      </div>
-    </div>
-  );
-}
 
 export default function App() {
   return (
