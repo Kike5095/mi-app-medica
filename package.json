@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
-    "build": "vite build",
+    "build": "vite build && npm run postbuild",
+    "postbuild": "cp public/_redirects dist/_redirects 2>/dev/null || xcopy public\\_redirects dist\\_redirects* /Y >NUL 2>&1",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
